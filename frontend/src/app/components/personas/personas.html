@@ -1,0 +1,322 @@
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">DIRECTORIO MUNICIPAL</p>
+    <h1>Personas</h1>
+    <p class="page-description">
+      Administra las personas que forman parte de una ciudad más limpia.
+    </p>
+  </div>
+  <button class="button primary" type="button" (click)="nuevo()" [disabled]="ocupado()">
+    <span aria-hidden="true">＋</span> Nueva persona
+  </button>
+</section>
+<section class="overview" aria-label="Resumen del módulo">
+  <div class="overview-icon" aria-hidden="true">♧</div>
+  <div class="overview-copy">
+    <strong>Las personas, en el centro de la gestión</strong>
+    <p>Un registro organizado para construir una mejor atención ciudadana.</p>
+  </div>
+  <div class="overview-count">
+    <strong>{{ personas().length }}</strong><span>personas registradas</span>
+  </div>
+</section>
+@if (aviso()) {
+  <div class="notice success" role="status">{{ aviso() }}</div>
+}
+<div class="content-grid">
+  <section class="panel directory" aria-labelledby="titulo-listado" [attr.aria-busy]="cargando()">
+    <div class="panel-heading">
+      <div>
+        <h2 id="titulo-listado">Directorio de personas</h2>
+        <p>Consulta y administra los registros.</p>
+      </div>
+      <button
+        class="button subtle compact"
+        type="button"
+        (click)="cargar()"
+        [disabled]="cargando() || ocupado()"
+      >
+        Actualizar
+      </button>
+    </div>
+    <div class="toolbar">
+      <label class="search"
+        ><span aria-hidden="true">⌕</span
+        ><input
+          aria-label="Buscar personas"
+          placeholder="Buscar por nombre, DNI o teléfono…"
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+          type="search" /></label
+      ><span class="results">{{ filtradas().length }} resultados</span>
+    </div>
+    @if (error()) {
+      <div class="notice error" role="alert">{{ error() }}</div>
+    }
+    @if (pendienteEliminar(); as persona) {
+      <div class="delete-confirm" role="region" aria-label="Confirmar eliminación">
+        <strong>¿Eliminar a {{ persona.nombres }} {{ persona.apellidos }}?</strong>
+        <p>Se eliminará su registro permanentemente.</p>
+        <div class="actions">
+          <button
+            class="button danger compact"
+            type="button"
+            (click)="eliminar()"
+            [disabled]="ocupado()"
+          >
+            {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar' }}</button><button
+            class="button subtle compact"
+            type="button"
+            (click)="pendienteEliminar.set(null)"
+            [disabled]="ocupado()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    }
+    <div class="table-container">
+      <table>
+        <caption class="sr-only">
+          Personas registradas: nombres, apellidos, DNI, teléfono y acciones.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">PERSONA</th>
+            <th scope="col">DNI</th>
+            <th scope="col">TELÉFONO</th>
+            <th scope="col" class="actions-heading">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (cargando()) {
+            <tr>
+              <td colspan="4" class="empty-state">
+                <span class="loader" aria-hidden="true"></span>
+                <p>Cargando personas…</p>
+              </td>
+            </tr>
+          } @else {
+            @for (persona of filtradas(); track persona.idPersona) {
+              <tr [class.selected]="seleccionada()?.idPersona === persona.idPersona">
+                <td>
+                  <div class="person-cell">
+                    <span class="avatar" aria-hidden="true">{{ iniciales(persona) }}</span>
+                    <div>
+                      <strong>{{ persona.nombres }} {{ persona.apellidos }}</strong
+                      ><span class="person-id">ID {{ persona.idPersona }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="numeric">{{ persona.dni }}</td>
+                <td class="numeric">{{ persona.telefono }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button
+                      type="button"
+                      (click)="abrir(persona, 'ver')"
+                      [disabled]="ocupado()"
+                      [attr.aria-label]="'Ver a ' + persona.nombres"
+                    >
+                      Ver</button
+                    ><button
+                      type="button"
+                      (click)="abrir(persona, 'editar')"
+                      [disabled]="ocupado()"
+                      [attr.aria-label]="'Editar a ' + persona.nombres"
+                    >
+                      Editar</button
+                    ><button
+                      class="delete-action"
+                      type="button"
+                      (click)="confirmarEliminar(persona)"
+                      [disabled]="ocupado()"
+                      [attr.aria-label]="'Eliminar a ' + persona.nombres"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <span class="empty-icon" aria-hidden="true">♧</span
+                  ><strong>{{
+                    error()
+                      ? 'No se pudieron cargar los registros'
+                      : busqueda()
+                        ? 'No encontramos coincidencias'
+                        : 'Tu directorio comienza aquí'
+                  }}</strong>
+                  <p>
+                    {{
+                      error()
+                        ? 'Revisa la conexión y pulsa Actualizar.'
+                        : busqueda()
+                          ? 'Prueba con otro nombre, DNI o teléfono.'
+                          : 'Completa el formulario para registrar a la primera persona.'
+                    }}
+                  </p>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span>{{ personas().length }} registros en el directorio</span
+      ><span class="connection" [class.online]="conectado() && !cargando()"
+        ><span aria-hidden="true">●</span>
+        {{
+          cargando()
+            ? 'Verificando conexión'
+            : conectado()
+              ? 'Base de datos conectada'
+              : 'Sin conexión verificada'
+        }}</span
+      >
+    </div>
+  </section>
+  <section
+    class="panel form-panel"
+    aria-labelledby="titulo-formulario"
+    [attr.aria-busy]="ocupado()"
+  >
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">
+          {{ modo() === 'crear' ? 'NUEVO REGISTRO' : 'REGISTRO #' + seleccionada()?.idPersona }}
+        </p>
+        <h2 id="titulo-formulario" tabindex="-1">{{ tituloFormulario() }}</h2>
+      </div>
+      <span class="form-symbol" aria-hidden="true">＋</span>
+    </div>
+    <p class="form-intro">
+      {{
+        modo() === 'ver'
+          ? 'Datos actuales de la persona seleccionada.'
+          : 'Completa los datos de la persona. Todos los campos son obligatorios.'
+      }}
+    </p>
+    @if (errorFormulario()) {
+      <div class="notice error" role="alert">{{ errorFormulario() }}</div>
+    }
+    @if (consultando()) {
+      <p class="notice" role="status">Consultando persona…</p>
+    }
+    <form [formRoot]="formulario">
+      <fieldset [disabled]="ocupado() || modo() === 'ver'">
+        <div class="field">
+          <label for="nombres">Nombres</label
+          ><input
+            id="nombres"
+            autocomplete="given-name"
+            placeholder="Ej. María Elena"
+            [formField]="formulario.nombres"
+            [attr.aria-invalid]="formulario.nombres().touched() && formulario.nombres().invalid()"
+            aria-describedby="error-nombres"
+          />
+          <div id="error-nombres" class="field-error">
+            @if (formulario.nombres().touched()) {
+              @for (error of formulario.nombres().errors(); track $index) {
+                <span>{{ error.message }}</span>
+              }
+            }
+          </div>
+        </div>
+        <div class="field">
+          <label for="apellidos">Apellidos</label
+          ><input
+            id="apellidos"
+            autocomplete="family-name"
+            placeholder="Ej. Torres Mendoza"
+            [formField]="formulario.apellidos"
+            [attr.aria-invalid]="
+              formulario.apellidos().touched() && formulario.apellidos().invalid()
+            "
+            aria-describedby="error-apellidos"
+          />
+          <div id="error-apellidos" class="field-error">
+            @if (formulario.apellidos().touched()) {
+              @for (error of formulario.apellidos().errors(); track $index) {
+                <span>{{ error.message }}</span>
+              }
+            }
+          </div>
+        </div>
+        <div class="field">
+          <label for="dni">DNI</label
+          ><input
+            id="dni"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="8 dígitos"
+            [formField]="formulario.dni"
+            [attr.aria-invalid]="formulario.dni().touched() && formulario.dni().invalid()"
+            aria-describedby="ayuda-dni error-dni"
+          /><small id="ayuda-dni"
+            >{{ modelo().dni.length }}/8 caracteres · El DNI debe ser único.</small
+          >
+          <div id="error-dni" class="field-error">
+            @if (formulario.dni().touched()) {
+              @for (error of formulario.dni().errors(); track $index) {
+                <span>{{ error.message }}</span>
+              }
+            }
+          </div>
+        </div>
+        <div class="field">
+          <label for="telefono">Teléfono</label
+          ><input
+            id="telefono"
+            type="tel"
+            autocomplete="tel-national"
+            inputmode="numeric"
+            placeholder="Ej. 987654321"
+            [formField]="formulario.telefono"
+            [attr.aria-invalid]="formulario.telefono().touched() && formulario.telefono().invalid()"
+            aria-describedby="ayuda-telefono error-telefono"
+          />
+          <small id="ayuda-telefono"
+            >{{ modelo().telefono.length }}/9 caracteres · Solo números, sin espacios.</small
+          >
+          <div id="error-telefono" class="field-error">
+            @if (formulario.telefono().touched()) {
+              @for (error of formulario.telefono().errors(); track $index) {
+                <span>{{ error.message }}</span>
+              }
+            }
+          </div>
+        </div>
+      </fieldset>
+      @if (modo() !== 'ver') {
+        <button
+          type="submit"
+          class="button primary full-width"
+          [disabled]="ocupado() || cargando()"
+        >
+          {{
+            formulario().submitting()
+              ? 'Guardando…'
+              : modo() === 'editar'
+                ? 'Guardar cambios'
+                : 'Registrar persona'
+          }}
+        </button>
+      }
+      @if (modo() !== 'crear') {
+        <button
+          type="button"
+          class="button subtle full-width cancel-button"
+          (click)="nuevo()"
+          [disabled]="ocupado()"
+        >
+          {{ modo() === 'ver' ? 'Cerrar detalle' : 'Cancelar edición' }}
+        </button>
+      }
+    </form>
+    <p class="form-footnote">El identificador se asigna automáticamente al registrar.</p>
+  </section>
+</div>

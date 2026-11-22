@@ -1,0 +1,28 @@
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Navegación principal">
+    <a class="brand" href="/personas" aria-label="Residuos, inicio"
+      ><span class="brand-mark" aria-hidden="true">♻</span
+      ><span>Residuos<span class="brand-caption">GESTIÓN MUNICIPAL</span></span></a
+    >
+    <p class="nav-label">ESPACIO DE TRABAJO</p>
+    <a class="nav-item active" href="/personas" aria-current="page"
+      ><span aria-hidden="true">◉</span> Personas</a
+    >
+    <div class="sidebar-note">
+      <span class="note-symbol" aria-hidden="true">♧</span
+      ><strong>Una ciudad más limpia<br />empieza con su gente.</strong>
+      <p>Gestión de residuos sólidos y atención de puntos críticos.</p>
+    </div>
+    <div class="sidebar-footer">Sistema de gestión ambiental</div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <span
+        >Gestión de residuos sólidos <span class="separator">/</span>
+        <strong>Personas</strong></span
+      ><span class="workspace-tag">Panel municipal</span>
+    </header>
+    <main id="contenido"><router-outlet /></main>
+    <footer class="page-footer">Gestión de Residuos · Registro de personas</footer>
+  </div>
+</div>

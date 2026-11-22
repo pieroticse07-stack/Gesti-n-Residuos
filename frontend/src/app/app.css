@@ -1,0 +1,197 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: #102e2b;
+  color: #dcece8;
+  padding: 32px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.6px;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 46px;
+  border-radius: 12px;
+  background: #205047;
+  color: #87d6b1;
+  font-size: 2rem;
+}
+.brand-caption {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.625rem;
+  letter-spacing: 1.8px;
+  font-weight: 500;
+  color: #a7c5bd;
+}
+.nav-label {
+  font-size: 0.6875rem;
+  letter-spacing: 1.6px;
+  margin: 50px 12px 16px;
+  color: #9cb9b1;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.active {
+  background: #245248;
+  box-shadow: inset 3px 0 #84d4ad;
+}
+.nav-item span {
+  color: #9ee1bf;
+}
+.sidebar-note {
+  margin-top: auto;
+  padding: 25px 12px 28px;
+}
+.note-symbol {
+  display: block;
+  font-size: 2.7rem;
+  color: #90ccb1;
+  margin-bottom: 12px;
+}
+.sidebar-note strong {
+  display: block;
+  line-height: 1.65;
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
+.sidebar-note p {
+  color: #a7c5bd;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.sidebar-footer {
+  padding: 18px 10px 0;
+  border-top: 1px solid #31504b;
+  color: #9cb9b1;
+  font-size: 0.75rem;
+}
+.workspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  min-height: 76px;
+  background: white;
+  border-bottom: 1px solid #e3e9e7;
+  padding: 20px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.875rem;
+  color: #65746e;
+}
+.topbar strong {
+  color: #344b43;
+  font-weight: 550;
+}
+.separator {
+  padding: 0 12px;
+  color: #afbab5;
+}
+.workspace-tag {
+  border: 1px solid #e0e8e4;
+  padding: 7px 12px;
+  border-radius: 6px;
+  color: #52685e;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+main {
+  padding: 36px;
+  flex: 1;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+.page-footer {
+  padding: 18px 36px;
+  color: #697a71;
+  font-size: 0.75rem;
+}
+@media (max-width: 1150px) {
+  .sidebar {
+    width: 195px;
+    padding-inline: 16px;
+  }
+  main {
+    padding: 28px 24px;
+  }
+  .topbar {
+    padding-inline: 24px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 16px 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    font-size: 1.25rem;
+  }
+  .brand-mark {
+    height: 38px;
+    width: 38px;
+  }
+  .nav-label,
+  .sidebar-note,
+  .sidebar-footer {
+    display: none;
+  }
+  .nav-item {
+    padding: 10px 14px;
+  }
+  .topbar {
+    min-height: 56px;
+    padding: 16px 20px;
+    font-size: 0.75rem;
+  }
+  .workspace-tag {
+    display: none;
+  }
+  main {
+    padding: 24px 16px;
+  }
+  .page-footer {
+    padding-inline: 16px;
+  }
+}

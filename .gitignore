@@ -1,0 +1,20 @@
+# Credenciales locales
+.env
+.env.*
+!.env.example
+
+# Respaldo local de los repositorios anteriores
+/.git-backups/
+
+# Dependencias y archivos generados
+node_modules/
+.venv/
+.angular/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+.uv-cache/
+coverage/
+.coverage
