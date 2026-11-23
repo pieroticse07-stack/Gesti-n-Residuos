@@ -1,0 +1,127 @@
+.access-layout {
+  max-width: 1120px;
+  margin: 50px auto;
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 55px;
+  padding: 0 24px;
+  align-items: start;
+}
+.access-story {
+  padding: 35px 0;
+  position: sticky;
+  top: 25px;
+}
+.section-tag {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: #3f805a;
+  font-weight: 650;
+}
+.access-story h1 {
+  font-size: 2.9rem;
+  letter-spacing: -1.8px;
+  line-height: 1.16;
+  margin: 24px 0;
+}
+.access-story > p {
+  font-size: 1rem;
+  color: #647b6c;
+  line-height: 1.85;
+  max-width: 420px;
+}
+.access-benefit {
+  display: flex;
+  gap: 17px;
+  margin-top: 28px;
+}
+.access-benefit > app-icon {
+  color: #578450;
+  width: 25px;
+  height: 25px;
+  margin-top: 3px;
+}
+.access-benefit strong {
+  font-size: 0.95rem;
+}
+.access-benefit p {
+  font-size: 0.87rem;
+  color: #6d7f72;
+  line-height: 1.7;
+  margin: 7px 0 0;
+  max-width: 320px;
+}
+.story-footer {
+  display: block;
+  margin-top: 45px;
+  color: #7a8e7d;
+  font-size: 0.8rem;
+}
+.access-form {
+  padding: 32px;
+}
+.access-form h2 {
+  font-size: 1.7rem;
+  letter-spacing: -0.7px;
+  margin: 10px 0;
+}
+.access-form > .muted {
+  line-height: 1.7;
+  font-size: 0.91rem;
+  margin-bottom: 27px;
+}
+.access-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  margin: 25px 0 18px;
+}
+.access-switch a {
+  font-weight: 650;
+  color: #1c7451;
+  text-decoration: none;
+}
+.input-action {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.input-action input {
+  min-width: 0;
+  flex: 1;
+}
+.input-action .button {
+  white-space: nowrap;
+  padding: 11px 13px;
+  font-size: 0.8rem;
+}
+.help {
+  font-size: 0.8rem !important;
+}
+.text-button {
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .access-layout {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+    margin: 25px auto;
+    gap: 16px;
+  }
+  .access-story {
+    padding: 12px 4px;
+    position: static;
+  }
+  .access-story h1 {
+    font-size: 2.1rem;
+  }
+  .access-benefit,
+  .story-footer {
+    display: none;
+  }
+  .access-form {
+    padding: 24px;
+  }
+  .access-story > p {
+    font-size: 0.94rem;
+  }
+}

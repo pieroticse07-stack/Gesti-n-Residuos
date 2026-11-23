@@ -1,0 +1,717 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">{{
+      auth.user()?.rol === 'administrador'
+        ? 'PANEL MUNICIPAL'
+        : auth.user()?.rol === 'cuadrilla'
+          ? 'EQUIPO DE LIMPIEZA'
+          : 'MI PARTICIPACIÓN'
+    }}</span>
+    <h1>{{ titles[mode] }}</h1>
+    <p>{{ subtitles[mode] }}</p>
+  </div>
+  <div class="heading-actions">
+    <button class="button subtle" (click)="load()" [disabled]="loading()">
+      <app-icon name="refresh" />Actualizar
+    </button>
+    @if (auth.user()?.rol === 'ciudadano' && ['panel', 'reportes'].includes(mode)) {
+      <a class="button primary" routerLink="/nuevo-reporte"
+        ><app-icon name="plus" />Nuevo reporte</a
+      >
+    }
+    @if (['cuadrillas', 'vehiculos', 'cuentas'].includes(mode)) {
+      <button class="button primary" (click)="edit(mode)">
+        <app-icon name="plus" />{{
+          mode === 'cuadrillas'
+            ? 'Nueva cuadrilla'
+            : mode === 'vehiculos'
+              ? 'Nuevo vehículo'
+              : 'Nueva cuenta'
+        }}
+      </button>
+    }
+  </div>
+</div>
+@if (error()) {
+  <div class="notice error" role="alert">
+    {{ error() }} <a routerLink="/ingresar">Volver al acceso</a>
+  </div>
+}
+@if (notice()) {
+  <div class="notice success" role="status">{{ notice() }}</div>
+}
+@if (loading()) {
+  <div class="loading-state" role="status"><span class="spinner"></span>Cargando información…</div>
+}
+@if (mode === 'panel') {
+  <section class="welcome-banner">
+    <div>
+      <span class="eyebrow">CADA ACCIÓN CUENTA</span>
+      <h2>Hola, {{ auth.user()?.nombres }}.</h2>
+      <p>
+        {{
+          auth.user()?.rol === 'ciudadano'
+            ? 'Gracias por ayudarnos a cuidar Huancayo. Aquí puedes seguir el avance de tus reportes.'
+            : 'La información a tiempo nos ayuda a coordinar una mejor atención.'
+        }}
+      </p>
+      <a
+        class="button light"
+        [routerLink]="auth.user()?.rol === 'ciudadano' ? '/nuevo-reporte' : '/reportes'"
+        >{{ auth.user()?.rol === 'ciudadano' ? 'Reportar un incidente' : 'Revisar reportes' }}</a
+      >
+    </div>
+    <div class="welcome-leaf" aria-hidden="true"><app-icon name="leaf" /></div>
+  </section>
+  <div class="metric-grid">
+    <article class="metric">
+      <span class="metric-label">Reportes registrados<app-icon name="catalog" /></span
+      ><strong>{{ loaded() ? summary()['total'] : '—' }}</strong
+      ><small>{{
+        auth.user()?.rol === 'administrador' ? 'Total del sistema' : 'En tu espacio'
+      }}</small>
+    </article>
+    <article class="metric">
+      <span class="metric-label">Por revisar<app-icon name="shield" /></span
+      ><strong>{{ loaded() ? summary()['revision_pendiente'] : '—' }}</strong
+      ><small>Pendientes de decisión municipal</small>
+    </article>
+    <article class="metric">
+      <span class="metric-label">En proceso<app-icon name="truck" /></span
+      ><strong>{{ loaded() ? summary()['en_proceso'] : '—' }}</strong
+      ><small>Aprobados, con atención iniciada</small>
+    </article>
+    <article class="metric">
+      <span class="metric-label">Resueltos<app-icon name="check" /></span
+      ><strong>{{ loaded() ? summary()['resueltos'] : '—' }}</strong
+      ><small>Con validación municipal</small>
+    </article>
+  </div>
+  <section class="card">
+    <div class="card-heading">
+      <div>
+        <h2>Últimos reportes</h2>
+        <p>El seguimiento de cada incidente, en un solo lugar.</p>
+      </div>
+      <a class="text-button" routerLink="/reportes">Ver todos</a>
+    </div>
+    @if (loaded() && !reports().length) {
+      <div class="empty-state">
+        <app-icon name="leaf" />
+        <h3>Aún no hay reportes</h3>
+        <p>
+          {{
+            auth.user()?.rol === 'ciudadano'
+              ? 'Tu primer reporte puede iniciar un cambio en tu barrio.'
+              : 'Los reportes aparecerán aquí cuando los ciudadanos los registren.'
+          }}
+        </p>
+      </div>
+    }
+    @for (r of reports().slice(0, 5); track r.idReporte) {
+      <a class="report-preview" [routerLink]="['/reportes', r.idReporte]"
+        ><span class="report-icon"><app-icon name="pin" /></span>
+        <div>
+          <strong
+            >{{ r.nombreTipo }} <small>#{{ r.idReporte }}</small></strong
+          >
+          <p>{{ r.direccionReferencia }}</p>
+        </div>
+        <span class="badge" [class]="'badge ' + badgeClass(r)">{{ badge(r) }}</span></a
+      >
+    }
+  </section>
+}
+@if (mode === 'reportes') {
+  <section class="card">
+    <div class="filters">
+      <div class="search-field">
+        <app-icon name="search" /><input
+          aria-label="Buscar reportes"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+          placeholder="Buscar por código, descripción o ubicación…"
+        />
+      </div>
+      <select
+        aria-label="Filtrar revisión"
+        [value]="review()"
+        (change)="review.set($any($event.target).value)"
+      >
+        <option value="">Toda revisión</option>
+        <option value="pendiente">Por revisar</option>
+        <option value="aprobado">Aprobados</option>
+        <option value="rechazado">Rechazados</option></select
+      ><select
+        aria-label="Filtrar atención"
+        [value]="status()"
+        (change)="status.set($any($event.target).value)"
+      >
+        <option value="">Toda atención</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="en proceso">En proceso</option>
+        <option value="resuelto">Resuelto</option></select
+      ><select
+        aria-label="Filtrar tipo de residuo"
+        [value]="type()"
+        (change)="type.set($any($event.target).value)"
+      >
+        <option value="">Todo residuo</option>
+        @for (t of catalogs().tipos; track t['idTipoResiduo']) {
+          <option [value]="t['idTipoResiduo']">{{ t['nombreTipo'] }}</option>
+        }</select
+      ><select
+        aria-label="Filtrar prioridad"
+        [value]="priority()"
+        (change)="priority.set($any($event.target).value)"
+      >
+        <option value="">Toda prioridad</option>
+        @for (p of catalogs().prioridades; track p['idPrioridad']) {
+          <option [value]="p['idPrioridad']">{{ p['nombrePrioridad'] }}</option>
+        }</select
+      ><label class="date-filter"
+        >Desde<input
+          type="date"
+          [value]="from()"
+          (change)="from.set($any($event.target).value)" /></label
+      ><label class="date-filter"
+        >Hasta<input
+          type="date"
+          [value]="to()"
+          (change)="to.set($any($event.target).value)" /></label
+      ><button class="text-button" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+    <div class="list-heading">
+      <span>{{ filtered().length }} resultados</span>
+      <div class="segmented">
+        <button [class.selected]="view() === 'list'" (click)="view.set('list')">
+          <app-icon name="catalog" />Lista</button
+        ><button [class.selected]="view() === 'map'" (click)="view.set('map')">
+          <app-icon name="map" />Mapa
+        </button>
+      </div>
+    </div>
+    @if (view() === 'map') {
+      <div class="map-padding">
+        <app-location-map [reports]="filtered()" (openReport)="openReport($event)" />
+        <p class="help">La lista inferior muestra los mismos reportes del mapa.</p>
+      </div>
+    }
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>REPORTE</th>
+            <th>UBICACIÓN</th>
+            <th>PRIORIDAD</th>
+            <th>ESTADO</th>
+            <th>FECHA</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.idReporte) {
+            <tr>
+              <td>
+                <strong>#{{ r.idReporte }} · {{ r.nombreTipo }}</strong
+                ><small>{{ r.descripcion }}</small>
+              </td>
+              <td>{{ r.direccionReferencia }}</td>
+              <td>
+                <span [class]="'priority priority-' + (r.nombrePrioridad || '')">{{
+                  r.nombrePrioridad || 'Sin asignar'
+                }}</span>
+              </td>
+              <td>
+                <span [class]="'badge ' + badgeClass(r)">{{ badge(r) }}</span>
+              </td>
+              <td class="nowrap">{{ r.fechaReporte | date: 'dd MMM yyyy' }}</td>
+              <td>
+                <a class="text-button" [routerLink]="['/reportes', r.idReporte]">Ver detalle</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (loaded() && !filtered().length) {
+      <div class="empty-state">
+        <app-icon name="catalog" />
+        <h3>No hay reportes para mostrar</h3>
+        <p>Los reportes registrados aparecerán aquí. Revisa también tus filtros.</p>
+      </div>
+    }
+    <div class="card-footnote">
+      Se muestran hasta 1 000 reportes recientes autorizados.
+      @if (updated()) {
+        Actualizado: {{ updated() | date: 'dd/MM/yyyy HH:mm' }}
+      }
+    </div>
+  </section>
+}
+@if (mode === 'atenciones') {
+  <section class="card">
+    <div class="card-heading">
+      <div>
+        <h2>Intervenciones asignadas</h2>
+        <p>
+          La finalización de una intervención requiere validación municipal para resolver el
+          reporte.
+        </p>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>REPORTE</th>
+            <th>CUADRILLA / VEHÍCULO</th>
+            <th>ASIGNACIÓN</th>
+            <th>AVANCE</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of attentions(); track a['idAtencion']) {
+            <tr>
+              <td>
+                <a class="text-button" [routerLink]="['/reportes', a['idReporte']]"
+                  >#{{ a['idReporte'] }}</a
+                ><small>{{ a['direccionReferencia'] }}</small>
+              </td>
+              <td>
+                <strong>{{ a['nombreCuadrilla'] }}</strong
+                ><small>{{ a['placa'] }}</small>
+              </td>
+              <td>{{ a['fechaAsignacion'] | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span
+                  [class]="
+                    'badge ' + (a['fechaFin'] ? 'green' : a['fechaInicio'] ? 'blue' : 'amber')
+                  "
+                  >{{
+                    a['fechaFin'] ? 'Finalizada' : a['fechaInicio'] ? 'En ejecución' : 'Por iniciar'
+                  }}</span
+                >
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (!a['fechaInicio']) {
+                    <button class="button subtle compact" (click)="advance(a, 'iniciar')">
+                      Iniciar
+                    </button>
+                  }
+                  @if (a['fechaInicio'] && !a['fechaFin']) {
+                    <button class="button primary compact" (click)="advance(a, 'finalizar')">
+                      Finalizar
+                    </button>
+                  }
+                  @if (!a['fechaFin']) {
+                    <button class="text-button" (click)="advance(a, 'observar')">
+                      Observación
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (loaded() && !attentions().length) {
+      <div class="empty-state">
+        <app-icon name="check" />
+        <h3>No tienes atenciones asignadas</h3>
+        <p>Aparecerán cuando el administrador asigne un reporte a tu cuadrilla.</p>
+      </div>
+    }
+  </section>
+}
+@if (mode === 'cuadrillas') {
+  <div class="resource-grid">
+    @for (c of resources()['cuadrillas']; track c['idCuadrilla']) {
+      <article class="card resource-card">
+        <div class="resource-card-top">
+          <span class="resource-symbol"><app-icon name="users" /></span
+          ><span
+            [class]="'badge ' + (c['fechaBaja'] ? 'neutral' : c['disponible'] ? 'green' : 'amber')"
+            >{{ c['fechaBaja'] ? 'De baja' : c['disponible'] ? 'Disponible' : 'Asignada' }}</span
+          >
+        </div>
+        <h2>{{ c['nombreCuadrilla'] }}</h2>
+        <p>{{ c['descripcion'] || 'Sin descripción adicional.' }}</p>
+        <small>{{ crewMembers(c['idCuadrilla']).length }} integrantes vigentes</small>
+        <div class="resource-actions">
+          <button class="text-button" (click)="edit('cuadrillas', c)">Editar cuadrilla</button
+          ><button class="button subtle compact" (click)="selectedCrew.set(c)">Integrantes</button>
+        </div>
+      </article>
+    }
+  </div>
+  @if (loaded() && !resources()['cuadrillas'].length) {
+    <div class="card empty-state">
+      <app-icon name="users" />
+      <h3>Organiza tu primera cuadrilla</h3>
+      <p>Registra el equipo y vincula sus integrantes para comenzar a asignar atenciones.</p>
+    </div>
+  }
+  @if (selectedCrew(); as crew) {
+    <section class="card member-section">
+      <div class="card-heading">
+        <div>
+          <h2>Integrantes de {{ crew['nombreCuadrilla'] }}</h2>
+          <p>Se conserva la vigencia de cada pertenencia.</p>
+        </div>
+        <div class="row-actions">
+          <button class="button primary compact" (click)="edit('integrante', crew)">
+            Vincular integrante</button
+          ><button class="text-button" (click)="selectedCrew.set(null)">Cerrar</button>
+        </div>
+      </div>
+      @for (m of resources()['integrantes']; track m['idPertenencia']) {
+        @if (m['idCuadrilla'] === crew['idCuadrilla']) {
+          <div class="member-row">
+            <div>
+              <strong>{{ m['integrante'] }}</strong
+              ><small
+                >Desde {{ m['fechaInicio'] | date: 'dd/MM/yyyy' }}
+                @if (m['fechaFin']) {
+                  · Hasta {{ m['fechaFin'] | date: 'dd/MM/yyyy' }}
+                }
+              </small>
+            </div>
+            @if (!m['fechaFin']) {
+              <button
+                class="text-button"
+                (click)="endMembership(m['idPertenencia'])"
+                [disabled]="busy()"
+              >
+                Finalizar pertenencia
+              </button>
+            } @else {
+              <span class="badge neutral">Histórica</span>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+}
+@if (mode === 'vehiculos') {
+  <section class="card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>VEHÍCULO</th>
+            <th>CAPACIDAD</th>
+            <th>ESTADO OPERATIVO</th>
+            <th>DISPONIBILIDAD</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of resources()['vehiculos']; track v['idVehiculo']) {
+            <tr>
+              <td>
+                <strong>{{ v['placa'] }}</strong
+                ><small>{{ v['marca'] }} · {{ v['modelo'] }}</small>
+              </td>
+              <td>{{ v['capacidadToneladas'] }} t</td>
+              <td>{{ v['estadoOperativo'] }}</td>
+              <td>
+                <span
+                  [class]="
+                    'badge ' + (v['fechaBaja'] ? 'neutral' : v['disponible'] ? 'green' : 'amber')
+                  "
+                  >{{
+                    v['fechaBaja'] ? 'De baja' : v['disponible'] ? 'Disponible' : 'No disponible'
+                  }}</span
+                >
+              </td>
+              <td><button class="text-button" (click)="edit('vehiculos', v)">Editar</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (loaded() && !resources()['vehiculos'].length) {
+      <div class="empty-state">
+        <app-icon name="truck" />
+        <h3>Aún no hay vehículos registrados</h3>
+        <p>Agrega los vehículos que participarán en las atenciones.</p>
+      </div>
+    }
+  </section>
+}
+@if (mode === 'cuentas') {
+  <section class="card">
+    <div class="card-heading">
+      <div>
+        <h2>Acceso al sistema</h2>
+        <p>
+          El registro público crea cuentas ciudadanas. Solo un administrador asigna permisos al
+          personal.
+        </p>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>PERSONA</th>
+            <th>CORREO</th>
+            <th>ROL</th>
+            <th>ESTADO</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of accounts(); track a['idUsuario']) {
+            <tr>
+              <td>
+                <strong>{{ a['nombre'] }}</strong>
+              </td>
+              <td>{{ a['correo'] }}</td>
+              <td>{{ a['rol'] }}</td>
+              <td>
+                <span [class]="'badge ' + (a['fechaEliminacion'] ? 'neutral' : 'green')">{{
+                  a['fechaEliminacion'] ? 'Inactiva' : 'Activa'
+                }}</span>
+              </td>
+              <td>
+                @if (a['idUsuario'] !== auth.user()?.idUsuario) {
+                  <button class="text-button" (click)="edit('cuentas', a)">Administrar</button>
+                } @else {
+                  <small>Tu cuenta</small>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+@if (mode === 'catalogos') {
+  <section class="card">
+    <div class="card-heading">
+      <div class="segmented">
+        <button [class.selected]="catalogKind() === 'tipos'" (click)="catalogKind.set('tipos')">
+          Tipos de residuo</button
+        ><button
+          [class.selected]="catalogKind() === 'prioridades'"
+          (click)="catalogKind.set('prioridades')"
+        >
+          Prioridades</button
+        ><button
+          [class.selected]="catalogKind() === 'estados'"
+          (click)="catalogKind.set('estados')"
+        >
+          Estados
+        </button>
+      </div>
+      @if (catalogKind() !== 'estados') {
+        <button class="button primary compact" (click)="edit('catalogo')">Nueva opción</button>
+      }
+    </div>
+    @if (catalogKind() === 'estados') {
+      <p class="catalog-note">
+        Los estados se mantienen activos para respetar el flujo de atención: pendiente, en proceso y
+        resuelto. La aprobación municipal es una decisión independiente.
+      </p>
+    }
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>NOMBRE</th>
+            <th>{{ catalogKind() === 'prioridades' ? 'ORDEN' : 'DESCRIPCIÓN' }}</th>
+            <th>ESTADO</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of catalogRows(); track $index) {
+            <tr>
+              <td>
+                <strong>{{ c['nombreTipo'] || c['nombrePrioridad'] || c['nombreEstado'] }}</strong>
+              </td>
+              <td>{{ c['descripcion'] || c['orden'] || 'Estado del flujo' }}</td>
+              <td>
+                <span [class]="'badge ' + (c['activo'] ? 'green' : 'neutral')">{{
+                  c['activo'] ? 'Activo' : 'Inactivo'
+                }}</span>
+              </td>
+              <td>
+                @if (catalogKind() !== 'estados') {
+                  <button class="text-button" (click)="edit('catalogo', c)">Editar</button>
+                } @else {
+                  <small>Configuración del proceso</small>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+@if (mode === 'indicadores') {
+  <section class="card indicator-filters">
+    <label
+      >Reportes desde<input
+        type="date"
+        [value]="from()"
+        (change)="from.set($any($event.target).value)" /></label
+    ><label
+      >Hasta<input type="date" [value]="to()" (change)="to.set($any($event.target).value)" /></label
+    ><button class="button primary" (click)="load()" [disabled]="loading()">Aplicar periodo</button
+    ><button class="text-button" (click)="from.set(''); to.set(''); load()">Todo el periodo</button>
+  </section>
+  @if (indicators(); as data) {
+    <div class="metric-grid">
+      <article class="metric">
+        <span class="metric-label">Por revisar</span
+        ><strong>{{ data['revision_pendiente'] }}</strong
+        ><small>Sin decisión municipal</small>
+      </article>
+      <article class="metric">
+        <span class="metric-label">Pendientes de atención</span
+        ><strong>{{ data['pendientes'] }}</strong
+        ><small>Reportes aprobados</small>
+      </article>
+      <article class="metric">
+        <span class="metric-label">En proceso</span><strong>{{ data['en_proceso'] }}</strong
+        ><small>Reportes aprobados</small>
+      </article>
+      <article class="metric">
+        <span class="metric-label">Resueltos</span><strong>{{ data['resueltos'] }}</strong
+        ><small>Cierre municipal validado</small>
+      </article>
+    </div>
+    <div class="two-columns">
+      <section class="card padded">
+        <h2>Tiempos promedio</h2>
+        <div class="time-metric">
+          <span>Desde reporte hasta inicio</span
+          ><strong>{{
+            data['horas_inicio'] === null
+              ? 'Sin datos'
+              : (data['horas_inicio'] | number: '1.1-1') + ' h'
+          }}</strong>
+        </div>
+        <div class="time-metric">
+          <span>Desde reporte hasta resolución</span
+          ><strong>{{
+            data['horas_resolucion'] === null
+              ? 'Sin datos'
+              : (data['horas_resolucion'] | number: '1.1-1') + ' h'
+          }}</strong>
+        </div>
+        <p class="help">
+          Se consideran únicamente casos con las fechas correspondientes. Total:
+          {{ data['total'] }} reportes; aprobados: {{ data['aprobados'] }}; rechazados:
+          {{ data['rechazados'] }}.
+        </p>
+      </section>
+      <section class="card padded">
+        <h2>Atenciones por cuadrilla</h2>
+        @for (c of data['cuadrillas']; track c['nombreCuadrilla']) {
+          <div class="load-row">
+            <span>{{ c['nombreCuadrilla'] }}</span
+            ><strong
+              >{{ c['total'] }} <small>({{ c['abiertas'] }} abiertas)</small></strong
+            >
+          </div>
+        }
+        @if (!data['cuadrillas'].length) {
+          <p class="help">Aún no hay cuadrillas registradas.</p>
+        }
+      </section>
+    </div>
+    <p class="help">
+      Periodo aplicado: {{ data['desde'] || 'Inicio' }} a {{ data['hasta'] || 'hoy' }} · Actualizado
+      {{ data['actualizado'] | date: 'dd/MM/yyyy HH:mm' }}. No se estiman toneladas recogidas a
+      partir de la capacidad vehicular.
+    </p>
+  }
+}
+@if (editor(); as e) {
+  <div class="modal-backdrop" (click)="!busy() && editor.set(null)">
+    <section
+      class="modal card"
+      role="dialog"
+      aria-modal="true"
+      appDialogFocus
+      (dismiss)="!busy() && editor.set(null)"
+      aria-labelledby="editor-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-heading">
+        <h2 id="editor-title">{{ e.title }}</h2>
+        <button
+          class="icon-button"
+          (click)="editor.set(null)"
+          [disabled]="busy()"
+          aria-label="Cerrar formulario"
+        >
+          <app-icon name="close" />
+        </button>
+      </div>
+      <form (submit)="save($event)" class="form-stack">
+        @if (editorError()) {
+          <div class="notice error" role="alert">{{ editorError() }}</div>
+        }
+        @for (f of e.fields; track f.key) {
+          <label
+            >{{ f.label }}
+            @if (f.options) {
+              <select
+                [value]="draft()[f.key] || ''"
+                (change)="setDraft(f.key, $any($event.target).value)"
+                [required]="!f.optional"
+              >
+                <option value="">Selecciona una opción</option>
+                @for (o of f.options; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            } @else if (f.type === 'textarea') {
+              <textarea
+                rows="3"
+                [value]="draft()[f.key] || ''"
+                (input)="setDraft(f.key, $any($event.target).value)"
+                [required]="!f.optional"
+                maxlength="1500"
+              ></textarea>
+            } @else {
+              <input
+                [type]="f.type || 'text'"
+                [value]="draft()[f.key] || ''"
+                (input)="setDraft(f.key, $any($event.target).value)"
+                [required]="!f.optional"
+                [attr.min]="f.min ?? null"
+                [attr.step]="f.type === 'number' ? 'any' : null"
+                [attr.minlength]="f.type === 'password' ? 10 : null"
+                [attr.maxlength]="f.type === 'password' ? 128 : 100"
+              />
+            }
+          </label>
+        }
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="button subtle"
+            (click)="editor.set(null)"
+            [disabled]="busy()"
+          >
+            Cancelar</button
+          ><button type="submit" class="button primary" [disabled]="busy()">
+            {{ busy() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

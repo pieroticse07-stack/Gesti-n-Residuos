@@ -1,0 +1,174 @@
+<div class="page-heading">
+  <div>
+    <span class="eyebrow">PARTICIPACIÓN CIUDADANA</span>
+    <h1>Reportar un incidente</h1>
+    <p>Cuéntanos qué sucede y ayúdanos a localizar el punto afectado.</p>
+  </div>
+  <a routerLink="/reportes" class="button subtle">Mis reportes</a>
+</div>
+@if (error()) {
+  <div class="notice error" role="alert">{{ error() }}</div>
+}
+<form [formRoot]="fields" class="report-form">
+  <div class="two-columns">
+    <section class="card padded">
+      <div class="section-title">
+        <span class="section-symbol"><app-icon name="catalog" /></span>
+        <div>
+          <h2>Detalles del incidente</h2>
+          <p>Los datos claros facilitan la revisión.</p>
+        </div>
+      </div>
+      <div class="form-stack">
+        <label
+          >Tipo de residuo<select [formField]="fields.idTipoResiduo">
+            <option value="">Selecciona un tipo</option>
+            @for (t of catalogs().tipos; track t['idTipoResiduo']) {
+              <option [value]="t['idTipoResiduo']">{{ t['nombreTipo'] }}</option>
+            }
+          </select></label
+        ><label
+          >¿Qué está ocurriendo?<textarea
+            [formField]="fields.descripcion"
+            rows="6"
+            placeholder="Describe los residuos, el lugar y la situación que observas."
+          ></textarea></label
+        ><small class="help"
+          >Al menos 10 caracteres. No incluyas información personal de otras personas.</small
+        ><label
+          >Dirección y referencia<textarea
+            [formField]="fields.direccionReferencia"
+            rows="3"
+            placeholder="Calle, número o una referencia cercana al incidente."
+          ></textarea>
+        </label>
+        <div class="photo-upload">
+          <label for="foto-reporte"
+            >Fotografía del incidente
+            <span class="help">Opcional · JPG, PNG o WebP · Máximo 5 MB</span></label
+          >
+          <input
+            id="foto-reporte"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="selectPhoto($event)"
+            [disabled]="fields().submitting() || readingPhoto()"
+            aria-describedby="foto-ayuda foto-error"
+          />
+          <small id="foto-ayuda" class="help"
+            >Adjunta una foto clara de los residuos. Evita incluir rostros, documentos o datos
+            personales.</small
+          >
+          @if (readingPhoto()) {
+            <p role="status" class="help">Cargando fotografía…</p>
+          }
+          @if (photoError()) {
+            <p id="foto-error" role="alert" class="field-error">{{ photoError() }}</p>
+          }
+          @if (photo(); as selected) {
+            <figure class="photo-preview">
+              <img
+                [src]="selected.data"
+                alt="Vista previa de la fotografía que se adjuntará al reporte"
+              />
+              <figcaption>{{ selected.name }}</figcaption>
+            </figure>
+            <button
+              class="text-button"
+              type="button"
+              (click)="removePhoto()"
+              [disabled]="fields().submitting() || readingPhoto()"
+            >
+              Quitar fotografía
+            </button>
+          }
+        </div>
+        <div class="info-box">
+          <app-icon name="shield" />
+          <p>
+            El administrador municipal revisará tu reporte antes de coordinar su atención. Podrás
+            consultar la decisión y su avance desde tu cuenta.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="card padded">
+      <div class="section-title">
+        <span class="section-symbol"><app-icon name="pin" /></span>
+        <div>
+          <h2>Ubicación del incidente</h2>
+          <p>Selecciona y confirma el punto afectado.</p>
+        </div>
+      </div>
+      <div class="input-action search-address">
+        <input
+          aria-label="Buscar dirección"
+          [value]="address()"
+          (input)="address.set($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault(); search()"
+          placeholder="Buscar una dirección en Huancayo"
+        /><button type="button" class="button subtle" (click)="search()" [disabled]="searching()">
+          Buscar
+        </button>
+      </div>
+      @if (results().length > 1) {
+        <p class="help">
+          Mostramos el primer resultado. Si no corresponde, selecciona otra coincidencia:
+        </p>
+      }
+      @for (r of results(); track $index) {
+        <button type="button" class="address-result" (click)="useAddress(r)">
+          {{ r['direccion'] }}
+        </button>
+      }
+      <app-location-map
+        [editable]="true"
+        [latitude]="numeric(model().latitud, -12.0651)"
+        [longitude]="numeric(model().longitud, -75.2049)"
+        (selected)="point($event)"
+      /><button type="button" class="text-button gps-button" (click)="gps()">
+        <app-icon name="pin" />Usar mi ubicación
+      </button>
+      @if (message()) {
+        <div class="notice" role="status">{{ message() }}</div>
+      }
+      <div class="form-grid">
+        <label
+          >Latitud<input
+            inputmode="decimal"
+            [value]="model().latitud"
+            (input)="coordinate('latitud', $any($event.target).value)"
+            placeholder="Ej. -12.0651000"
+            required /></label
+        ><label
+          >Longitud<input
+            inputmode="decimal"
+            [value]="model().longitud"
+            (input)="coordinate('longitud', $any($event.target).value)"
+            placeholder="Ej. -75.2049000"
+            required
+        /></label>
+      </div>
+      <label class="checkbox-label"
+        ><input
+          type="checkbox"
+          [checked]="confirmed()"
+          (change)="confirmed.set($any($event.target).checked)"
+        /><span>Confirmo que el punto corresponde al incidente que estoy reportando.</span></label
+      >
+    </section>
+  </div>
+  <div class="form-footer">
+    <p class="help">Tu reporte se registrará como pendiente de revisión.</p>
+    <button
+      type="submit"
+      class="button primary"
+      [disabled]="fields().submitting() || readingPhoto()"
+    >
+      <app-icon name="plus" />{{ fields().submitting() ? 'Enviando…' : 'Enviar reporte' }}
+    </button>
+  </div>
+  @if (fields().invalid() && fields().touched()) {
+    <p class="field-error">Completa el tipo de residuo, descripción, referencia y coordenadas.</p>
+  }
+</form>

@@ -268,6 +268,27 @@
           </div>
         </div>
         <div class="field">
+          @if (modo() !== 'ver') {
+            <button
+              class="button subtle compact"
+              type="button"
+              (click)="consultarDni()"
+              [disabled]="ocupado()"
+            >
+              Consultar DNI con ApisPeru</button
+            ><small class="help">La consulta sugiere nombres; no verifica la titularidad.</small>
+          }
+          @if (mensajeDni()) {
+            <div class="notice" role="status">{{ mensajeDni() }}</div>
+          }
+          @if (sugerenciaDni(); as sugerencia) {
+            <div class="notice success">
+              <p>{{ sugerencia.nombres }} {{ sugerencia.apellidos }}</p>
+              <button type="button" class="button subtle compact" (click)="usarSugerencia()">
+                Confirmar estos datos
+              </button>
+            </div>
+          }
           <label for="telefono">Teléfono</label
           ><input
             id="telefono"

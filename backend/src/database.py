@@ -24,4 +24,5 @@ def connection() -> Iterator[psycopg.Connection]:
     params.setdefault("connect_timeout", "10")
     with psycopg.connect(**params, row_factory=dict_row) as conn:
         conn.execute("SET LOCAL statement_timeout = '15s'")
+        conn.execute("SET LOCAL TIME ZONE 'America/Lima'")
         yield conn

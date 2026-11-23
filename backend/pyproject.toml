@@ -12,6 +12,7 @@ dependencies = [
     "psycopg[binary]>=3.3.9",
     "pydantic-settings>=2.16.3",
     "uvicorn[standard]>=0.54.0",
+    "pillow>=12,<13",
 ]
 
 [project.scripts]
@@ -19,11 +20,19 @@ backend = "backend.main:run"
 init-db = "backend.init_db:run"
 
 [build-system]
-requires = ["uv_build>=0.13.6,<0.14.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=80,<85"]
+build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
     "pytest>=9.2.0",
 ]
+
+[tool.setuptools]
+packages = ["backend", "backend.apis", "backend.repositories", "backend.schemas", "backend.services"]
+package-dir = { backend = "src" }
+include-package-data = false
+
+[tool.setuptools.package-data]
+backend = ["migrations/*.sql"]
