@@ -39,6 +39,14 @@ export class PersonaService {
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`).pipe(catchError(this.fallar));
   }
+  consultarDni(dni: string): Observable<{ dni: string; nombres: string; apellidos: string }> {
+    return this.http
+      .post<{ dni: string; nombres: string; apellidos: string }>(
+        `${environment.apiUrl}/api/integraciones/dni/consulta`,
+        { dni },
+      )
+      .pipe(catchError(this.fallar));
+  }
   private validar(persona: Persona): Persona {
     if (
       !persona ||
@@ -59,7 +67,7 @@ export class PersonaService {
     let mensaje = 'No se pudo completar la operación. Intenta nuevamente.';
     if (error.status === 0) {
       mensaje =
-        'No se pudo conectar con el backend. Verifica que esté ejecutándose en el puerto 8000.';
+        'No se pudo conectar con el backend. Verifica que esté ejecutándose en el puerto 8000 o 8001.';
     } else if (typeof error.error?.detail === 'string') {
       mensaje = error.error.detail;
     } else if (error.status === 422) {

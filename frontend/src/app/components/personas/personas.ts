@@ -26,6 +26,12 @@ export class Personas {
   protected readonly eliminando = signal(false);
   protected readonly consultando = signal(false);
   protected readonly errorFormulario = signal('');
+  protected readonly sugerenciaDni = signal<{
+    dni: string;
+    nombres: string;
+    apellidos: string;
+  } | null>(null);
+  protected readonly mensajeDni = signal('');
   protected readonly modelo = signal<PersonaDatos>(vacio());
   protected readonly formulario = form(
     this.modelo,
@@ -135,6 +141,31 @@ export class Personas {
   }
   protected iniciales(persona: Persona): string {
     return `${persona.nombres.charAt(0)}${persona.apellidos.charAt(0)}`.toLocaleUpperCase('es');
+  }
+  protected async consultarDni(): Promise<void> {
+    const dni = this.modelo().dni;
+    this.sugerenciaDni.set(null);
+    this.mensajeDni.set('');
+    if (!/^[0-9]{8}$/.test(dni)) {
+      this.mensajeDni.set('Introduce un DNI de 8 dígitos.');
+      return;
+    }
+    if (this.ocupado()) return;
+    this.consultando.set(true);
+    try {
+      const sugerencia = await firstValueFrom(this.service.consultarDni(dni));
+      if (this.modelo().dni === dni) this.sugerenciaDni.set(sugerencia);
+    } catch (error) {
+      this.mensajeDni.set(this.mensaje(error));
+    } finally {
+      this.consultando.set(false);
+    }
+  }
+  protected usarSugerencia(): void {
+    const s = this.sugerenciaDni();
+    if (s && s.dni === this.modelo().dni)
+      this.modelo.update((m) => ({ ...m, nombres: s.nombres, apellidos: s.apellidos }));
+    this.sugerenciaDni.set(null);
   }
   private async guardar() {
     if (this.modo() === 'ver') return;

@@ -1,0 +1,321 @@
+<a class="back-link" routerLink="/reportes">Volver a reportes</a>
+@if (error()) {
+  <div class="notice error" role="alert">{{ error() }}</div>
+}
+@if (notice()) {
+  <div class="notice success" role="status">{{ notice() }}</div>
+}
+@if (loading()) {
+  <div class="loading-state" role="status"><span class="spinner"></span>Cargando reporte…</div>
+}
+@if (report; as r) {
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">REPORTE CIUDADANO #{{ r.idReporte }}</span>
+      <h1>{{ r.nombreTipo }}</h1>
+      <p>Registrado el {{ r.fechaReporte | date: 'dd/MM/yyyy HH:mm' }}</p>
+    </div>
+    <span
+      [class]="
+        'badge large-badge ' +
+        (r.revision === 'rechazado'
+          ? 'red'
+          : r.nombreEstado === 'resuelto'
+            ? 'green'
+            : r.revision === 'pendiente'
+              ? 'amber'
+              : 'blue')
+      "
+      >{{ label(r) }}</span
+    >
+  </div>
+  <div class="detail-grid">
+    <div class="detail-main">
+      <section class="card padded">
+        <div class="section-title">
+          <span class="section-symbol"><app-icon name="catalog" /></span>
+          <div>
+            <h2>Información del incidente</h2>
+            <p>{{ r.reportante }}</p>
+          </div>
+        </div>
+        <p class="report-description">{{ r.descripcion }}</p>
+        <div class="detail-facts">
+          <div>
+            <span>Revisión municipal</span
+            ><strong>{{
+              r.revision === 'pendiente'
+                ? 'Pendiente'
+                : r.revision === 'aprobado'
+                  ? 'Aprobado'
+                  : 'Rechazado'
+            }}</strong>
+          </div>
+          <div>
+            <span>Prioridad</span><strong>{{ r.nombrePrioridad || 'Sin asignar' }}</strong>
+          </div>
+          <div>
+            <span>Validación territorial</span
+            ><strong>{{
+              r.validacionTerritorial === 'pendiente'
+                ? 'Por validar'
+                : r.validacionTerritorial === 'dentro'
+                  ? 'Dentro del ámbito'
+                  : 'Fuera del ámbito'
+            }}</strong>
+          </div>
+          <div>
+            <span>Atención</span
+            ><strong>{{
+              r.revision === 'aprobado' ? r.nombreEstado : 'No aplica hasta aprobación'
+            }}</strong>
+          </div>
+        </div>
+        @if (r.observacionValidacion) {
+          <div class="info-box">
+            <app-icon name="shield" />
+            <p>{{ r.observacionValidacion }}</p>
+          </div>
+        }
+        @if (r.idReporteOriginal) {
+          <p class="help">Relacionada con el reporte original #{{ r.idReporteOriginal }}.</p>
+        }
+      </section>
+      @if (r.fotoDisponible) {
+        <section class="card padded">
+          <h2>Fotografía del incidente</h2>
+          @if (photoUrl()) {
+            <figure class="report-photo">
+              <img [src]="photoUrl()" alt="Fotografía de los residuos adjunta al reporte" />
+            </figure>
+          } @else {
+            <p class="help" role="status">{{ photoError() || 'Cargando fotografía…' }}</p>
+          }
+        </section>
+      }
+      <section class="card padded">
+        <div class="section-title">
+          <span class="section-symbol"><app-icon name="pin" /></span>
+          <div>
+            <h2>Ubicación reportada</h2>
+            <p>{{ r.direccionReferencia }}</p>
+          </div>
+        </div>
+        <app-location-map [latitude]="+r.latitud" [longitude]="+r.longitud" [reports]="[r]" />
+        <p class="help">Latitud {{ r.latitud }} · Longitud {{ r.longitud }}</p>
+      </section>
+      <section class="card padded">
+        <h2>Intervenciones de limpieza</h2>
+        @for (a of data()!['atenciones']; track a['idAtencion']) {
+          <article class="attention-card">
+            <div class="attention-heading">
+              <div>
+                <strong>{{ a['nombreCuadrilla'] }}</strong><small
+                  >Atención #{{ a['idAtencion'] }} · Vehículo {{ a['placa'] }}</small
+                >
+              </div>
+              <span
+                [class]="'badge ' + (a['fechaFin'] ? 'green' : a['fechaInicio'] ? 'blue' : 'amber')"
+                >{{
+                  a['fechaFin'] ? 'Finalizada' : a['fechaInicio'] ? 'En ejecución' : 'Por iniciar'
+                }}</span
+              >
+            </div>
+            <p class="help">
+              Asignada {{ a['fechaAsignacion'] | date: 'dd/MM/yyyy HH:mm' }}
+              @if (a['fechaInicio']) {
+                · Inicio {{ a['fechaInicio'] | date: 'dd/MM/yyyy HH:mm' }}
+              }
+              @if (a['fechaFin']) {
+                · Fin {{ a['fechaFin'] | date: 'dd/MM/yyyy HH:mm' }}
+              }
+            </p>
+            @if (a['observacionCuadrilla']) {
+              <p class="report-description">{{ a['observacionCuadrilla'] }}</p>
+            }
+            @if (auth.user()?.rol !== 'ciudadano') {
+              <div class="row-actions">
+                @if (!a['fechaInicio']) {
+                  <button class="button primary compact" (click)="launch('iniciar', a)">
+                    Iniciar atención
+                  </button>
+                  @if (admin) {
+                    <button class="button subtle compact" (click)="launch('reasignar', a)">
+                      Reasignar
+                    </button>
+                  }
+                }
+                @if (a['fechaInicio'] && !a['fechaFin']) {
+                  <button class="button primary compact" (click)="launch('finalizar', a)">
+                    Finalizar intervención
+                  </button>
+                }
+                @if (!a['fechaFin']) {
+                  <button class="text-button" (click)="launch('observar', a)">Observación</button>
+                }
+              </div>
+            }
+          </article>
+        } @empty {
+          <p class="help">Este reporte aún no tiene intervenciones asignadas.</p>
+        }
+      </section>
+      @if (admin) {
+        <section class="card padded">
+          <h2>Historial de prioridades</h2>
+          @for (p of data()!['prioridades']; track p['idHistorialPrioridad']) {
+            <div class="history-entry">
+              <strong>{{ p['nombrePrioridad'] }}</strong>
+              <p>{{ p['motivo'] }}</p>
+              <small>{{ p['fechaCambio'] | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          } @empty {
+            <p class="help">Sin cambios de prioridad.</p>
+          }
+          <h2 class="spaced-heading">Historial de asignaciones</h2>
+          @for (a of data()!['asignaciones']; track a['idHistorialAsignacion']) {
+            <div class="history-entry">
+              <strong>{{ a['nombreCuadrilla'] }} · {{ a['placa'] }}</strong>
+              <p>{{ a['motivo'] }}</p>
+              <small
+                >{{ a['fechaAsignacion'] | date: 'dd/MM/yyyy HH:mm' }} ·
+                {{ a['fechaFin'] ? 'Vigencia finalizada' : 'Vigente' }}</small
+              >
+            </div>
+          } @empty {
+            <p class="help">Sin asignaciones registradas.</p>
+          }
+        </section>
+      }
+    </div>
+    <aside class="detail-aside">
+      @if (admin) {
+        <section class="card padded">
+          <h2>Gestión municipal</h2>
+          <p class="help">Cada decisión conserva responsable, fecha y motivo.</p>
+          <div class="vertical-actions">
+            @if (!data()!['atenciones'].length) {
+              <button class="button primary" (click)="launch('aprobar')">
+                <app-icon name="check" />Aprobar reporte</button
+              ><button class="button subtle" (click)="launch('rechazar')">Rechazar reporte</button>
+            }
+            <button class="button subtle" (click)="launch('prioridad')">Establecer prioridad</button
+            ><button class="button subtle" (click)="launch('duplicidad')">
+              Revisar duplicidad
+            </button>
+            @if (r.revision === 'aprobado' && r.nombreEstado !== 'resuelto') {
+              <button
+                class="button primary"
+                (click)="launch('asignar')"
+                [disabled]="!r.idPrioridad"
+              >
+                Asignar atención</button
+              ><button class="button subtle" (click)="launch('resolver')" [disabled]="!canResolve">
+                Validar resolución
+              </button>
+            }
+            @if (r.nombreEstado === 'resuelto') {
+              <button class="button subtle" (click)="launch('reabrir')">Reabrir reporte</button>
+            }
+          </div>
+        </section>
+      }
+      <section class="card padded">
+        <h2>Decisiones de revisión</h2>
+        @for (v of data()!['revisiones']; track $index) {
+          <div class="history-entry">
+            <span [class]="'badge ' + (v['revision'] === 'aprobado' ? 'green' : 'red')">{{
+              v['revision'] === 'aprobado' ? 'Aprobado' : 'Rechazado'
+            }}</span>
+            <p>{{ v['motivo'] }}</p>
+            <small>{{ v['fechaCambio'] | date: 'dd/MM/yyyy HH:mm' }}</small>
+          </div>
+        } @empty {
+          <p class="help">El administrador todavía no ha registrado una decisión.</p>
+        }
+      </section>
+      <section class="card padded">
+        <h2>Seguimiento del reporte</h2>
+        <div class="timeline">
+          @for (h of data()!['estados']; track h['idHistorial']) {
+            <article>
+              <span class="timeline-dot"></span><strong>{{ h['nombreEstado'] }}</strong>
+              <p>{{ h['observacion'] }}</p>
+              <small>{{ h['fechaCambio'] | date: 'dd/MM/yyyy HH:mm' }}</small><small>{{
+                h['responsable']
+              }}</small>
+            </article>
+          }
+        </div>
+      </section>
+    </aside>
+  </div>
+}
+@if (action(); as a) {
+  <div class="modal-backdrop" (click)="!busy() && action.set(null)">
+    <section
+      class="modal card"
+      role="dialog"
+      aria-modal="true"
+      appDialogFocus
+      (dismiss)="!busy() && action.set(null)"
+      aria-labelledby="action-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-heading">
+        <h2 id="action-title">{{ a.title }}</h2>
+        <button
+          class="icon-button"
+          (click)="action.set(null)"
+          [disabled]="busy()"
+          aria-label="Cerrar"
+        >
+          <app-icon name="close" />
+        </button>
+      </div>
+      <form (submit)="submit($event)" class="form-stack">
+        @if (actionError()) {
+          <div class="notice error" role="alert">{{ actionError() }}</div>
+        }
+        @for (f of a.fields; track f.key) {
+          <label
+            >{{ f.label }}
+            @if (f.options) {
+              <select
+                [value]="draft()[f.key] || ''"
+                (change)="setDraft(f.key, $any($event.target).value)"
+                [required]="!f.optional"
+              >
+                <option value="">Selecciona una opción</option>
+                @for (o of f.options; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            } @else {
+              <textarea
+                rows="4"
+                [value]="draft()[f.key] || ''"
+                (input)="setDraft(f.key, $any($event.target).value)"
+                minlength="5"
+                maxlength="1500"
+                required
+              ></textarea>
+            }
+          </label>
+        }
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="button subtle"
+            (click)="action.set(null)"
+            [disabled]="busy()"
+          >
+            Cancelar</button
+          ><button type="submit" class="button primary" [disabled]="busy()">
+            {{ busy() ? 'Guardando…' : 'Confirmar' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

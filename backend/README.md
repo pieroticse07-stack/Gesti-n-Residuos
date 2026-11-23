@@ -1,57 +1,56 @@
-# Backend · Gestión de Residuos
+# Backend · Huancayo Limpio
 
-FastAPI y PostgreSQL/Supabase. Único recurso implementado: Persona.
+FastAPI y PostgreSQL/Supabase para personas, cuentas, reportes, revisión municipal,
+cuadrillas, vehículos, atenciones e historiales. La guía completa de esta rama está
+en el [README de la raíz](../README.md).
 
-## Inicio
+## Preparar el esquema y el acceso municipal
 
-Requiere Python 3.13 o 3.14 y uv (el proyecto fija Python 3.14).
+Desde esta carpeta:
 
 ```powershell
 uv sync
-# Si .env no existe: Copy-Item .env.example .env
-# Completar DATABASE_URL en .env con la URI del Session Pooler de Supabase.
-uv run init-db
-uv run backend
+uv run python -m backend.setup migrate
+uv run python -m backend.setup crear-personal
 ```
 
-La aplicación escucha en `http://localhost:8000`. Swagger: `/docs`.
-`/health` verifica FastAPI y `/health/db` verifica conexión y columnas de Persona.
+La herramienta local permite crear el primer administrador sin dejar contraseñas
+predeterminadas. El registro público solo crea cuentas ciudadanas.
 
-Si no configuras la base de datos, el CRUD responde 503. No existe almacenamiento en memoria ni datos de demostración.
+Las migraciones se aplican explícitamente, conservan Persona y sus registros y no
+se ejecutan al iniciar Uvicorn. Usa una base dedicada para pruebas destructivas.
 
-## Tabla
+## Ejecutar sin recarga automática
 
-`public."Persona"`: `idPersona` (identity), `nombres`, `apellidos`, `dni` (único de 8 dígitos), `telefono` (9 dígitos). El archivo `src/backend/migrations/001_persona.sql` se aplica de manera explícita mediante `uv run init-db` o el SQL Editor de Supabase. No se ejecuta al arrancar el servidor. Está preparado para un proyecto nuevo y no adapta tablas existentes incompatibles.
-
-## Rutas
-
-- `GET /api/personas`
-- `GET /api/personas/{id}`
-- `POST /api/personas`
-- `PUT /api/personas/{id}`
-- `DELETE /api/personas/{id}`
-
-Ejemplo de JSON para POST y PUT:
-
-```json
-{
-  "nombres": "María Elena",
-  "apellidos": "Torres Mendoza",
-  "dni": "00123456",
-  "telefono": "987654321"
-}
+```powershell
+uv run uvicorn backend.main:app --port 8001
 ```
 
-PUT requiere los cuatro campos y mantiene el ID. Las respuestas incluyen `idPersona`. DNI repetido: 409; persona inexistente: 404; datos inválidos: 422; conexión no disponible: 503.
+Si Windows bloquea el lanzador de Uvicorn:
 
-## Configuración y pruebas
+```powershell
+uv run python -m uvicorn backend.main:app --port 8001
+```
 
-`.env` se carga desde esta carpeta, independientemente del directorio desde el que se inicie Python. Variables del sistema tienen precedencia. Reinicia el backend tras editarlo. `CORS_ORIGINS` contiene orígenes separados por comas. Nunca subas `.env`; `.env.example` contiene solo marcadores.
+Documentación: http://localhost:8001/docs. Diagnóstico de base: `/health/db`.
+Los endpoints administrativos de Persona requieren login con rol administrador.
+
+## Configuración privada
+
+`DATABASE_URL`, `APISPERU_TOKEN`, `GOOGLE_MAPS_BROWSER_KEY` y
+`GOOGLE_GEOCODING_API_KEY` se configuran en `backend/.env`, excluido de Git.
+El archivo `.env.example` documenta los nombres sin incluir secretos reales.
+Reinicia el proceso después de editar las variables. No se exponen al cliente
+el token de ApisPeru, la conexión SQL ni la clave privada de geocodificación.
+
+## Pruebas
 
 ```powershell
 uv run pytest -q
 ```
 
-Las pruebas del contrato HTTP usan un repositorio simulado. La prueba real de integración requiere `TEST_DATABASE_URL` y una tabla ya preparada en un proyecto de pruebas; inserta, consulta, actualiza y elimina únicamente un registro temporal.
+La prueba optativa `tests/test_workflow_database.py` usa
+`RUN_WORKFLOW_DB_TESTS=1` y revierte las filas creadas al terminar. Los
+identificadores de las secuencias pueden avanzar aunque se reviertan las filas.
 
-Las capas `apis`, `schemas`, `services` y `repositories` siguen la organización de Semana 14. El repositorio ejecuta SQL parametrizado mediante psycopg y cada operación confirma su transacción antes de responder. El módulo actual es para desarrollo local; la autenticación administrativa corresponde a una etapa posterior.
+El paquete Python se llama `backend` y se configura para utilizar directamente `backend/src`. No se necesita una carpeta `src/backend`.

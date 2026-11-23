@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, Path, Response
 from backend.repositories.persona_repository import PersonaRepository
 from backend.schemas.persona import PersonaCreate, PersonaRead, PersonaUpdate
 from backend.services.persona_service import PersonaService
+from backend.services.auth import administrator
 
-router = APIRouter(prefix="/api/personas", tags=["Personas"])
+router = APIRouter(prefix="/api/personas", tags=["Personas"], dependencies=[Depends(administrator)])
 PersonaId = Annotated[int, Path(gt=0)]
 
 
