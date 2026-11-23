@@ -23,21 +23,21 @@ import { Icon } from '../shared/icon';
           <app-icon name="pin" /> Huancayo, Junín · Cuidamos nuestros espacios
         </div>
       </div>
-      <div class="city-art" aria-hidden="true">
-        <div class="sun"></div>
-        <div class="mountain mountain-back"></div>
-        <div class="mountain mountain-front"></div>
-        <div class="city-building b1"></div>
-        <div class="city-building b2"></div>
-        <div class="city-building b3"></div>
-        <div class="city-building b4"></div>
-        <div class="city-tree t1"></div>
-        <div class="city-tree t2"></div>
-        <div class="city-road"></div>
-        <div class="floating-card">
-          <span class="mini-icon"><app-icon name="check" /></span>
-          <div>
-            <strong>Cada reporte cuenta</strong><span>Conectamos tu voz con la acción</span>
+      <div class="hero-visual">
+        <div class="city-art">
+          <img
+            class="recycling-photo"
+            src="/images/reciclaje-huancayo.png"
+            alt="Niños participando en una actividad de reciclaje con materiales recolectados"
+            width="656"
+            height="395"
+            fetchpriority="high"
+          />
+          <div class="floating-card">
+            <span class="mini-icon"><app-icon name="check" /></span>
+            <div>
+              <strong>Cada reporte cuenta</strong><span>Conectamos tu voz con la acción</span>
+            </div>
           </div>
         </div>
       </div>
