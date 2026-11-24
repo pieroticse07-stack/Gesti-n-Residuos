@@ -164,7 +164,9 @@ export class LocationMap implements OnDestroy {
         return;
       }
       // Leaflet accede a window: cargar únicamente al renderizar en el navegador.
-      this.maps = await import('leaflet');
+      const leaflet = await import('leaflet');
+      // Producción empaqueta CommonJS como default; desarrollo puede exponer los exports.
+      this.maps = leaflet.default ?? leaflet;
       if (this.destroyed) return;
       this.map = this.maps.map(this.canvas()!.nativeElement, {
         center: [this.latitude(), this.longitude()],
