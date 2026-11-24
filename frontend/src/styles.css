@@ -1,5 +1,44 @@
 @import 'leaflet/dist/leaflet.css';
 
+/* Bootstrap 5 aporta los componentes; estos valores conservan la marca municipal.
+   Los diálogos usan estado y foco de Angular, sin plugins que modifiquen el DOM. */
+.btn-primary {
+  --bs-btn-bg: #1c704e;
+  --bs-btn-border-color: #1c704e;
+  --bs-btn-hover-bg: #14563b;
+  --bs-btn-hover-border-color: #14563b;
+  --bs-btn-active-bg: #104630;
+  --bs-btn-active-border-color: #104630;
+  --bs-btn-disabled-bg: #1c704e;
+  --bs-btn-disabled-border-color: #1c704e;
+  --bs-btn-focus-shadow-rgb: 28, 112, 78;
+}
+.btn-outline-secondary {
+  --bs-btn-color: #405a48;
+  --bs-btn-border-color: #c6d5ca;
+  --bs-btn-hover-bg: #edf4ef;
+  --bs-btn-hover-color: #233e30;
+  --bs-btn-hover-border-color: #9cb5a5;
+  --bs-btn-active-bg: #dcebe1;
+  --bs-btn-active-color: #233e30;
+}
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #5c9d73;
+  box-shadow: 0 0 0 0.2rem rgb(28 112 78 / 15%);
+}
+.form-check-input:checked {
+  background-color: #1c704e;
+  border-color: #1c704e;
+}
+.table {
+  --bs-table-color: #294737;
+  --bs-table-border-color: #e1e8df;
+  --bs-table-hover-bg: #f0f7f2;
+  --bs-table-hover-color: #233e30;
+}
+
 /* You can add global styles to this file, and also import other style files */
 :root {
   color-scheme: light;
@@ -13,6 +52,16 @@
 }
 body {
   margin: 0;
+  --bs-body-font-family: 'Segoe UI', system-ui, sans-serif;
+  --bs-body-color: #233e30;
+  --bs-body-bg: #f5f7f4;
+  --bs-primary: #1c704e;
+  --bs-primary-rgb: 28, 112, 78;
+  --bs-link-color: #1c704e;
+  --bs-link-hover-color: #14563b;
+  font-family: var(--bs-body-font-family);
+  color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
 }
 button,
 input {
@@ -188,6 +237,7 @@ label {
   line-height: 1.5;
 }
 input[type='checkbox'] {
+  padding: 0;
   width: 17px;
   min-height: 17px;
   height: 17px;
@@ -980,7 +1030,7 @@ tr:last-child td {
   font-size: 0.76rem;
   color: #879975;
 }
-.modal-backdrop {
+.app-modal-overlay {
   position: fixed;
   inset: 0;
   background: #172f1c80;
@@ -991,7 +1041,7 @@ tr:last-child td {
   padding: 20px;
   backdrop-filter: blur(3px);
 }
-.modal {
+.app-dialog {
   width: 540px;
   max-width: 100%;
   max-height: 90vh;
@@ -1121,7 +1171,7 @@ tr:last-child td {
   .form-footer .button {
     width: 100%;
   }
-  .modal {
+  .app-dialog {
     padding: 23px;
   }
   .attention-heading {
@@ -1183,7 +1233,7 @@ tr:last-child td {
   color: #819075;
   margin-top: 5px;
 }
-.modal-backdrop {
+.app-modal-overlay {
   position: fixed;
   inset: 0;
   background: #102e2b66;
@@ -1194,7 +1244,7 @@ tr:last-child td {
   padding: 24px;
   backdrop-filter: blur(3px);
 }
-.modal {
+.app-dialog {
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
@@ -1277,7 +1327,7 @@ tr:last-child td {
     align-items: flex-start;
     flex-wrap: wrap;
   }
-  .modal-backdrop {
+  .app-modal-overlay {
     padding: 14px;
   }
 }

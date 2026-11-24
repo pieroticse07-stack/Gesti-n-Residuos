@@ -1,15 +1,15 @@
 <a class="back-link" routerLink="/reportes">Volver a reportes</a>
 @if (error()) {
-  <div class="notice error" role="alert">{{ error() }}</div>
+  <div class="notice error alert alert-danger" role="alert">{{ error() }}</div>
 }
 @if (notice()) {
-  <div class="notice success" role="status">{{ notice() }}</div>
+  <div class="notice success alert alert-success" role="status">{{ notice() }}</div>
 }
 @if (loading()) {
   <div class="loading-state" role="status"><span class="spinner"></span>Cargando reporte…</div>
 }
 @if (report; as r) {
-  <div class="page-heading">
+  <div class="page-heading d-flex flex-wrap gap-3">
     <div>
       <span class="eyebrow">REPORTE CIUDADANO #{{ r.idReporte }}</span>
       <h1>{{ r.nombreTipo }}</h1>
@@ -31,7 +31,7 @@
   </div>
   <div class="detail-grid">
     <div class="detail-main">
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <div class="section-title">
           <span class="section-symbol"><app-icon name="catalog" /></span>
           <div>
@@ -82,18 +82,22 @@
         }
       </section>
       @if (r.fotoDisponible) {
-        <section class="card padded">
+        <section class="card padded shadow-sm">
           <h2>Fotografía del incidente</h2>
           @if (photoUrl()) {
             <figure class="report-photo">
-              <img [src]="photoUrl()" alt="Fotografía de los residuos adjunta al reporte" />
+              <img
+                class="img-fluid"
+                [src]="photoUrl()"
+                alt="Fotografía de los residuos adjunta al reporte"
+              />
             </figure>
           } @else {
             <p class="help" role="status">{{ photoError() || 'Cargando fotografía…' }}</p>
           }
         </section>
       }
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <div class="section-title">
           <span class="section-symbol"><app-icon name="pin" /></span>
           <div>
@@ -104,7 +108,7 @@
         <app-location-map [latitude]="+r.latitud" [longitude]="+r.longitud" [reports]="[r]" />
         <p class="help">Latitud {{ r.latitud }} · Longitud {{ r.longitud }}</p>
       </section>
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <h2>Intervenciones de limpieza</h2>
         @for (a of data()!['atenciones']; track a['idAtencion']) {
           <article class="attention-card">
@@ -134,24 +138,35 @@
               <p class="report-description">{{ a['observacionCuadrilla'] }}</p>
             }
             @if (auth.user()?.rol !== 'ciudadano') {
-              <div class="row-actions">
+              <div class="row-actions d-flex flex-wrap gap-2">
                 @if (!a['fechaInicio']) {
-                  <button class="button primary compact" (click)="launch('iniciar', a)">
+                  <button
+                    class="button primary compact btn btn-primary btn-sm"
+                    (click)="launch('iniciar', a)"
+                  >
                     Iniciar atención
                   </button>
                   @if (admin) {
-                    <button class="button subtle compact" (click)="launch('reasignar', a)">
+                    <button
+                      class="button subtle compact btn btn-outline-secondary btn-sm"
+                      (click)="launch('reasignar', a)"
+                    >
                       Reasignar
                     </button>
                   }
                 }
                 @if (a['fechaInicio'] && !a['fechaFin']) {
-                  <button class="button primary compact" (click)="launch('finalizar', a)">
+                  <button
+                    class="button primary compact btn btn-primary btn-sm"
+                    (click)="launch('finalizar', a)"
+                  >
                     Finalizar intervención
                   </button>
                 }
                 @if (!a['fechaFin']) {
-                  <button class="text-button" (click)="launch('observar', a)">Observación</button>
+                  <button class="text-button btn btn-link" (click)="launch('observar', a)">
+                    Observación
+                  </button>
                 }
               </div>
             }
@@ -161,7 +176,7 @@
         }
       </section>
       @if (admin) {
-        <section class="card padded">
+        <section class="card padded shadow-sm">
           <h2>Historial de prioridades</h2>
           @for (p of data()!['prioridades']; track p['idHistorialPrioridad']) {
             <div class="history-entry">
@@ -190,37 +205,46 @@
     </div>
     <aside class="detail-aside">
       @if (admin) {
-        <section class="card padded">
+        <section class="card padded shadow-sm">
           <h2>Gestión municipal</h2>
           <p class="help">Cada decisión conserva responsable, fecha y motivo.</p>
           <div class="vertical-actions">
             @if (!data()!['atenciones'].length) {
-              <button class="button primary" (click)="launch('aprobar')">
+              <button class="button primary btn btn-primary" (click)="launch('aprobar')">
                 <app-icon name="check" />Aprobar reporte</button
-              ><button class="button subtle" (click)="launch('rechazar')">Rechazar reporte</button>
+              ><button class="button subtle btn btn-outline-secondary" (click)="launch('rechazar')">
+                Rechazar reporte
+              </button>
             }
-            <button class="button subtle" (click)="launch('prioridad')">Establecer prioridad</button
-            ><button class="button subtle" (click)="launch('duplicidad')">
+            <button class="button subtle btn btn-outline-secondary" (click)="launch('prioridad')">
+              Establecer prioridad</button
+            ><button class="button subtle btn btn-outline-secondary" (click)="launch('duplicidad')">
               Revisar duplicidad
             </button>
             @if (r.revision === 'aprobado' && r.nombreEstado !== 'resuelto') {
               <button
-                class="button primary"
+                class="button primary btn btn-primary"
                 (click)="launch('asignar')"
                 [disabled]="!r.idPrioridad"
               >
                 Asignar atención</button
-              ><button class="button subtle" (click)="launch('resolver')" [disabled]="!canResolve">
+              ><button
+                class="button subtle btn btn-outline-secondary"
+                (click)="launch('resolver')"
+                [disabled]="!canResolve"
+              >
                 Validar resolución
               </button>
             }
             @if (r.nombreEstado === 'resuelto') {
-              <button class="button subtle" (click)="launch('reabrir')">Reabrir reporte</button>
+              <button class="button subtle btn btn-outline-secondary" (click)="launch('reabrir')">
+                Reabrir reporte
+              </button>
             }
           </div>
         </section>
       }
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <h2>Decisiones de revisión</h2>
         @for (v of data()!['revisiones']; track $index) {
           <div class="history-entry">
@@ -234,7 +258,7 @@
           <p class="help">El administrador todavía no ha registrado una decisión.</p>
         }
       </section>
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <h2>Seguimiento del reporte</h2>
         <div class="timeline">
           @for (h of data()!['estados']; track h['idHistorial']) {
@@ -252,9 +276,9 @@
   </div>
 }
 @if (action(); as a) {
-  <div class="modal-backdrop" (click)="!busy() && action.set(null)">
+  <div class="app-modal-overlay" (click)="!busy() && action.set(null)">
     <section
-      class="modal card"
+      class="app-dialog card shadow-sm modal-content"
       role="dialog"
       aria-modal="true"
       appDialogFocus
@@ -265,7 +289,7 @@
       <div class="modal-heading">
         <h2 id="action-title">{{ a.title }}</h2>
         <button
-          class="icon-button"
+          class="icon-button btn btn-sm"
           (click)="action.set(null)"
           [disabled]="busy()"
           aria-label="Cerrar"
@@ -275,13 +299,14 @@
       </div>
       <form (submit)="submit($event)" class="form-stack">
         @if (actionError()) {
-          <div class="notice error" role="alert">{{ actionError() }}</div>
+          <div class="notice error alert alert-danger" role="alert">{{ actionError() }}</div>
         }
         @for (f of a.fields; track f.key) {
-          <label
+          <label class="form-label"
             >{{ f.label }}
             @if (f.options) {
               <select
+                class="form-select"
                 [value]="draft()[f.key] || ''"
                 (change)="setDraft(f.key, $any($event.target).value)"
                 [required]="!f.optional"
@@ -293,6 +318,7 @@
               </select>
             } @else {
               <textarea
+                class="form-control"
                 rows="4"
                 [value]="draft()[f.key] || ''"
                 (input)="setDraft(f.key, $any($event.target).value)"
@@ -306,12 +332,12 @@
         <div class="modal-actions">
           <button
             type="button"
-            class="button subtle"
+            class="button subtle btn btn-outline-secondary"
             (click)="action.set(null)"
             [disabled]="busy()"
           >
             Cancelar</button
-          ><button type="submit" class="button primary" [disabled]="busy()">
+          ><button type="submit" class="button primary btn btn-primary" [disabled]="busy()">
             {{ busy() ? 'Guardando…' : 'Confirmar' }}
           </button>
         </div>

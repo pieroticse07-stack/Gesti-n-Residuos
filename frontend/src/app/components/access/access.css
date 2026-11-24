@@ -1,9 +1,6 @@
 .access-layout {
   max-width: 1120px;
   margin: 50px auto;
-  display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: 55px;
   padding: 0 24px;
   align-items: start;
 }
@@ -102,10 +99,8 @@
 }
 @media (max-width: 760px) {
   .access-layout {
-    grid-template-columns: 1fr;
     padding: 0 16px;
     margin: 25px auto;
-    gap: 16px;
   }
   .access-story {
     padding: 12px 4px;

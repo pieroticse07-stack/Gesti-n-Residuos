@@ -1,4 +1,4 @@
-<section class="page-heading">
+<section class="page-heading d-flex flex-wrap gap-3">
   <div>
     <p class="eyebrow">DIRECTORIO MUNICIPAL</p>
     <h1>Personas</h1>
@@ -6,7 +6,12 @@
       Administra las personas que forman parte de una ciudad más limpia.
     </p>
   </div>
-  <button class="button primary" type="button" (click)="nuevo()" [disabled]="ocupado()">
+  <button
+    class="button primary btn btn-primary"
+    type="button"
+    (click)="nuevo()"
+    [disabled]="ocupado()"
+  >
     <span aria-hidden="true">＋</span> Nueva persona
   </button>
 </section>
@@ -21,17 +26,21 @@
   </div>
 </section>
 @if (aviso()) {
-  <div class="notice success" role="status">{{ aviso() }}</div>
+  <div class="notice success alert alert-success" role="status">{{ aviso() }}</div>
 }
 <div class="content-grid">
-  <section class="panel directory" aria-labelledby="titulo-listado" [attr.aria-busy]="cargando()">
+  <section
+    class="panel directory card shadow-sm"
+    aria-labelledby="titulo-listado"
+    [attr.aria-busy]="cargando()"
+  >
     <div class="panel-heading">
       <div>
         <h2 id="titulo-listado">Directorio de personas</h2>
         <p>Consulta y administra los registros.</p>
       </div>
       <button
-        class="button subtle compact"
+        class="button subtle compact btn btn-outline-secondary btn-sm"
         type="button"
         (click)="cargar()"
         [disabled]="cargando() || ocupado()"
@@ -40,9 +49,10 @@
       </button>
     </div>
     <div class="toolbar">
-      <label class="search"
+      <label class="search form-label"
         ><span aria-hidden="true">⌕</span
         ><input
+          class="form-control"
           aria-label="Buscar personas"
           placeholder="Buscar por nombre, DNI o teléfono…"
           [value]="busqueda()"
@@ -51,7 +61,7 @@
       ><span class="results">{{ filtradas().length }} resultados</span>
     </div>
     @if (error()) {
-      <div class="notice error" role="alert">{{ error() }}</div>
+      <div class="notice error alert alert-danger" role="alert">{{ error() }}</div>
     }
     @if (pendienteEliminar(); as persona) {
       <div class="delete-confirm" role="region" aria-label="Confirmar eliminación">
@@ -59,13 +69,13 @@
         <p>Se eliminará su registro permanentemente.</p>
         <div class="actions">
           <button
-            class="button danger compact"
+            class="button danger compact btn btn-outline-danger btn-sm"
             type="button"
             (click)="eliminar()"
             [disabled]="ocupado()"
           >
             {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar' }}</button><button
-            class="button subtle compact"
+            class="button subtle compact btn btn-outline-secondary btn-sm"
             type="button"
             (click)="pendienteEliminar.set(null)"
             [disabled]="ocupado()"
@@ -75,8 +85,8 @@
         </div>
       </div>
     }
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <caption class="sr-only">
           Personas registradas: nombres, apellidos, DNI, teléfono y acciones.
         </caption>
@@ -111,8 +121,9 @@
                 <td class="numeric">{{ persona.dni }}</td>
                 <td class="numeric">{{ persona.telefono }}</td>
                 <td>
-                  <div class="row-actions">
+                  <div class="row-actions d-flex flex-wrap gap-2">
                     <button
+                      class="btn btn-link"
                       type="button"
                       (click)="abrir(persona, 'ver')"
                       [disabled]="ocupado()"
@@ -120,6 +131,7 @@
                     >
                       Ver</button
                     ><button
+                      class="btn btn-link"
                       type="button"
                       (click)="abrir(persona, 'editar')"
                       [disabled]="ocupado()"
@@ -127,7 +139,7 @@
                     >
                       Editar</button
                     ><button
-                      class="delete-action"
+                      class="delete-action btn btn-outline-danger"
                       type="button"
                       (click)="confirmarEliminar(persona)"
                       [disabled]="ocupado()"
@@ -180,7 +192,7 @@
     </div>
   </section>
   <section
-    class="panel form-panel"
+    class="panel form-panel card shadow-sm"
     aria-labelledby="titulo-formulario"
     [attr.aria-busy]="ocupado()"
   >
@@ -201,7 +213,7 @@
       }}
     </p>
     @if (errorFormulario()) {
-      <div class="notice error" role="alert">{{ errorFormulario() }}</div>
+      <div class="notice error alert alert-danger" role="alert">{{ errorFormulario() }}</div>
     }
     @if (consultando()) {
       <p class="notice" role="status">Consultando persona…</p>
@@ -209,8 +221,9 @@
     <form [formRoot]="formulario">
       <fieldset [disabled]="ocupado() || modo() === 'ver'">
         <div class="field">
-          <label for="nombres">Nombres</label
+          <label class="form-label" for="nombres">Nombres</label
           ><input
+            class="form-control"
             id="nombres"
             autocomplete="given-name"
             placeholder="Ej. María Elena"
@@ -227,8 +240,9 @@
           </div>
         </div>
         <div class="field">
-          <label for="apellidos">Apellidos</label
+          <label class="form-label" for="apellidos">Apellidos</label
           ><input
+            class="form-control"
             id="apellidos"
             autocomplete="family-name"
             placeholder="Ej. Torres Mendoza"
@@ -247,8 +261,9 @@
           </div>
         </div>
         <div class="field">
-          <label for="dni">DNI</label
+          <label class="form-label" for="dni">DNI</label
           ><input
+            class="form-control"
             id="dni"
             inputmode="numeric"
             autocomplete="off"
@@ -270,7 +285,7 @@
         <div class="field">
           @if (modo() !== 'ver') {
             <button
-              class="button subtle compact"
+              class="button subtle compact btn btn-outline-secondary btn-sm"
               type="button"
               (click)="consultarDni()"
               [disabled]="ocupado()"
@@ -279,18 +294,23 @@
             ><small class="help">La consulta sugiere nombres; no verifica la titularidad.</small>
           }
           @if (mensajeDni()) {
-            <div class="notice" role="status">{{ mensajeDni() }}</div>
+            <div class="notice alert alert-info" role="status">{{ mensajeDni() }}</div>
           }
           @if (sugerenciaDni(); as sugerencia) {
-            <div class="notice success">
+            <div class="notice success alert alert-success">
               <p>{{ sugerencia.nombres }} {{ sugerencia.apellidos }}</p>
-              <button type="button" class="button subtle compact" (click)="usarSugerencia()">
+              <button
+                type="button"
+                class="button subtle compact btn btn-outline-secondary btn-sm"
+                (click)="usarSugerencia()"
+              >
                 Confirmar estos datos
               </button>
             </div>
           }
-          <label for="telefono">Teléfono</label
+          <label class="form-label" for="telefono">Teléfono</label
           ><input
+            class="form-control"
             id="telefono"
             type="tel"
             autocomplete="tel-national"
@@ -315,7 +335,7 @@
       @if (modo() !== 'ver') {
         <button
           type="submit"
-          class="button primary full-width"
+          class="button primary full-width btn btn-primary w-100"
           [disabled]="ocupado() || cargando()"
         >
           {{
@@ -330,7 +350,7 @@
       @if (modo() !== 'crear') {
         <button
           type="button"
-          class="button subtle full-width cancel-button"
+          class="button subtle full-width cancel-button btn btn-outline-secondary w-100"
           (click)="nuevo()"
           [disabled]="ocupado()"
         >
