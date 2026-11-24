@@ -62,6 +62,69 @@ Si se inició una configuración de frontend como Docker, no continuar con esa
 configuración: el servicio que se publique para esta entrega debe indicar Node.
 No modificar ni eliminar el servicio Docker del backend.
 
+## GitHub Actions: pruebas y despliegue
+
+El workflow está en **`.github/workflows/deploy-frontend.yml` en la raíz del
+repositorio**. GitHub no ejecuta workflows dentro de `frontend/.github/`:
+en la clase esa ubicación funciona porque el frontend es un repositorio propio.
+Aquí los comandos se ejecutan en `frontend` y los filtros excluyen cambios
+exclusivos del backend y de documentación.
+
+```text
+Gestión-Residuos/
+├── .github/workflows/
+│   ├── ci-backend.yml
+│   ├── deploy-backend.yml
+│   └── deploy-frontend.yml
+├── backend/
+│   └── .github/workflows/
+│       ├── ci.yml                 # copia de referencia
+│       └── deploy.yml             # copia de referencia
+└── frontend/
+    ├── .github/workflows/
+    │   └── deploy.yml             # copia de referencia
+    └── render.yaml
+```
+
+En un pull request hacia `main` se ejecutan `npm ci`, las pruebas sin watch y
+la compilación. En un push a `main` (incluida una fusión), el job `deploy`
+solicita el despliegue **solo si `build-and-test` terminó correctamente**.
+No hay disparador manual. Node se toma de `.node-version` (24.21.0).
+No se necesitan credenciales de Supabase ni de las API para estos checks.
+
+### Pasos manuales
+
+1. En los secretos de Actions del repositorio, conservar
+   **`HOOK_RENDER_FRONTEND`** con la URL completa del Deploy Hook del servicio
+   frontend: `https://api.render.com/deploy/srv-...?key=...`.
+   No usar el hook del backend ni publicar su valor en archivos o capturas.
+2. En el **servicio frontend existente** de Render, ir a **Settings >
+   Auto-Deploy > Off**. Como se creó manualmente, editar `render.yaml` no
+   modifica por sí solo ese servicio. Si se administra mediante Blueprint,
+   sincronizarlo para aplicar `autoDeploy: false`. Se mantienen buildCommand,
+   startCommand, healthCheckPath, Node y el plan Free de 512 MB.
+3. Hacer commit y push en `github-actions-frontend`, abrir el pull request,
+   esperar los checks y fusionarlo a `main`. Revisar **CI y Deploy Frontend**
+   en Actions: primero `build-and-test` y luego `deploy`.
+4. Revisar en Render que el nuevo deploy termine **Live** y corresponda al
+   commit enviado. Abrir `https://URL-REAL-DEL-FRONTEND/health`: debe responder
+   estado `ok`, servicio `frontend` y runtime `node`. Verificar también las
+   pantallas, la sesión y los reportes.
+
+El hook fija `ref` al commit que pasó los checks. Su respuesta solo acredita
+que Render aceptó la solicitud: un check verde de `deploy` **no acredita que
+la nueva versión haya terminado de publicarse**. El plan Free puede tardar
+varios minutos. Para reintentar sin otro push, usar **Re-run all jobs** en la
+ejecución correspondiente al push a `main`.
+
+Render vuelve a ejecutar `npm ci && npm run build`; Actions no sube `dist/`
+ni otros artefactos. Este cambio no añade procesos al servidor ni modifica
+su límite de memoria. El servicio y los workflows del backend se conservan.
+
+Referencias: [ubicación de workflows en GitHub](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions),
+[Deploy Hooks de Render](https://render.com/docs/deploy-hooks),
+[configuración de auto-deploy](https://render.com/docs/blueprint-spec#autodeploytrigger).
+
 ## Backend, cookies y CORS
 
 En producción `environment.ts` usa `apiUrl: ''`, por lo que Angular llama a `/api`

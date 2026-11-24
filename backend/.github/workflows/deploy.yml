@@ -1,0 +1,73 @@
+# Copia de referencia para organizar esta carpeta.
+# GitHub ejecuta el archivo de la raiz: .github/workflows/deploy-backend.yml
+# Esta copia conserva las rutas del monorepositorio; no se ejecuta desde aqui.
+
+name: Deploy Backend
+
+on:
+  workflow_run:
+    workflows: [CI Backend]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# No cancelar una ejecución que ya haya solicitado un despliegue a Render.
+concurrency:
+  group: backend-deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Desplegar y comprobar backend
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      BACKEND_URL: ${{ vars.RENDER_BACKEND_URL || 'https://gesti-n-residuos.onrender.com' }}
+    steps:
+      # No descargar ni ejecutar código o artefactos de pull requests aquí.
+      - name: Solicitar despliegue en Render
+        env:
+          HOOK_RENDER_BACKEND: ${{ secrets.HOOK_RENDER_BACKEND }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$HOOK_RENDER_BACKEND" ]]; then
+            echo '::error::Falta el secreto HOOK_RENDER_BACKEND en GitHub Actions.'
+            exit 1
+          fi
+          case "$HOOK_RENDER_BACKEND" in
+            https://api.render.com/deploy/*) ;;
+            *) echo '::error::HOOK_RENDER_BACKEND debe contener el Deploy Hook HTTPS de Render.'; exit 1 ;;
+          esac
+          # ref fija el commit comprobado; no se despliega otro main que llegue después.
+          curl --fail --silent --show-error --max-time 60 \
+            --request POST --url-query "ref=$DEPLOY_SHA" \
+            --output "$RUNNER_TEMP/render-backend-deploy.json" \
+            "$HOOK_RENDER_BACKEND"
+          echo "Render aceptó la solicitud para el commit $DEPLOY_SHA."
+          echo 'La respuesta del hook no se utiliza para hacer polling del despliegue.'
+
+      - name: Smoke test de proceso y Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          for endpoint in /health /health/db; do
+            echo "Comprobando $endpoint"
+            curl --fail --silent --show-error \
+              --retry 12 --retry-all-errors --retry-delay 15 \
+              --retry-max-time 600 --connect-timeout 15 --max-time 120 \
+              "${BACKEND_URL%/}$endpoint"
+            echo
+          done
