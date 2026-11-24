@@ -1,6 +1,7 @@
 """FastAPI: módulo Persona y diagnóstico de conexión."""
 
 import logging
+import os
 
 import psycopg
 import uvicorn
@@ -90,3 +91,14 @@ app = create_app()
 
 def run() -> None:
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=False)
+
+
+def serve() -> None:
+    """Arranque del contenedor: Render proporciona PORT en el entorno."""
+    try:
+        port = int(os.environ.get("PORT", "10000"))
+    except ValueError:
+        raise ValueError("PORT debe ser un número entero entre 1 y 65535.") from None
+    if not 1 <= port <= 65535:
+        raise ValueError("PORT debe ser un número entero entre 1 y 65535.")
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=False)
