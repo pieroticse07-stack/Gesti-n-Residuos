@@ -1,0 +1,17 @@
+# En New > Blueprint: Blueprint Path = frontend/render.yaml.
+# rootDir siempre se interpreta desde la raíz del repositorio existente.
+services:
+  - type: web
+    name: huancayo-limpio-frontend
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: BACKEND_URL
+        value: https://gesti-n-residuos.onrender.com

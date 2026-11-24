@@ -25,6 +25,7 @@ export class ApiEndpoint {
   }
 
   private async discover(): Promise<string> {
+    if (!environment.apiUrl) return ''; // Producción: proxy /api del frontend.
     const configured = new URL(environment.apiUrl);
     const local =
       ['localhost', '127.0.0.1'].includes(configured.hostname) &&
@@ -52,7 +53,8 @@ export class ApiEndpoint {
 }
 
 export const credentialsInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith(`${environment.apiUrl}/`)) return next(request);
+  const apiPrefix = `${environment.apiUrl}/api/`;
+  if (!request.url.startsWith(apiPrefix)) return next(request);
   const endpoint = inject(ApiEndpoint);
   return from(endpoint.resolve()).pipe(
     switchMap((base) =>
