@@ -1,1 +1,2 @@
-export const environment = { production: true, apiUrl: 'http://localhost:8001' };
+// Producción usa /api en el mismo origen; Nginx lo reenvía a BACKEND_URL.
+export const environment = { production: true, apiUrl: '' };

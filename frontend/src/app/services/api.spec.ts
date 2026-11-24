@@ -23,6 +23,32 @@ describe('Conexión automática a los puertos locales del backend', () => {
   });
   afterEach(() => http.verify());
 
+  it('producción usa /api del mismo origen y conserva las cookies sin detectar puertos', async () => {
+    const previous = environment.apiUrl;
+    environment.apiUrl = '';
+    try {
+      const pending = firstValueFrom(
+        client.post('/api/auth/login', { correo: 'test@example.test' }),
+      );
+      await settle();
+      const login = http.expectOne('/api/auth/login');
+      expect(login.request.withCredentials).toBe(true);
+      login.flush({ idUsuario: 1 });
+      await pending;
+      http.expectNone('/health');
+    } finally {
+      environment.apiUrl = previous;
+    }
+  });
+
+  it('no redirige solicitudes ajenas a la API ni les añade credenciales', async () => {
+    const pending = firstValueFrom(client.get('https://example.test/resource'));
+    const external = http.expectOne('https://example.test/resource');
+    expect(external.request.withCredentials).toBe(false);
+    external.flush({});
+    await pending;
+  });
+
   it('usa 8001 si está disponible y comparte la detección entre solicitudes', async () => {
     const first = firstValueFrom(client.get(`${preferred}/api/auth/me`));
     const second = firstValueFrom(client.get(`${preferred}/api/config/publica`));
