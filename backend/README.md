@@ -143,15 +143,11 @@ otra base de datos ni un administrador predeterminado durante el despliegue.
 
 - Publicar la rama, hacer commit/push en GitHub Desktop y fusionar el pull request
   hacia `main`. El repositorio ya está inicializado: no ejecutar otro `git init`.
-- Crear el Web Service y cargar las variables en Render siguiendo lo anterior.
-- Verificar `/health`, `/health/db` y `/docs` en la URL asignada.
-- En una tarea posterior de frontend, cambiar `apiUrl` en sus archivos
-  `environment.ts` y `environment.development.ts` a la URL HTTPS real, sin `/api`
-  final. Esos archivos no se modifican en este alcance.
-- Antes de conectar el frontend publicado, revisar la política de cookies:
-  actualmente usa `SameSite=Lax`. Un frontend y backend en sitios diferentes
-  necesitan una configuración de sesión compatible; cambiar solo CORS y la URL
-  no garantiza que el navegador envíe la cookie. Esa integración queda pendiente.
+- El backend ya tiene su servicio Docker: conservarlo y sus variables privadas.
+  No crear un servicio duplicado para configurar Actions.
+- Configurar el secreto del hook y desactivar Auto-Deploy según la sección CI/CD.
+- Verificar en Render la fecha/commit desplegado y las rutas `/health`, `/health/db`.
+- La configuración del frontend y su futuro workflow se mantienen fuera de esta tarea.
 
 Documentación: [Docker en Render](https://render.com/docs/docker),
 [puertos de Web Services](https://render.com/docs/web-services#port-binding) y
@@ -173,6 +169,113 @@ terminal nueva después de iniciar Docker Desktop y comprueba `docker version`.
 En instalaciones por usuario, los ejecutables pueden estar en
 `%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin`; esa carpeta debe estar en
 el PATH de la terminal desde la que se ejecuta la construcción.
+
+## CI/CD del backend con GitHub Actions
+
+Los workflows se guardan en **`.github/workflows/` de la raíz del repositorio**.
+GitHub no ejecuta workflows en `backend/.github/workflows/`. Es la adaptación
+necesaria porque este repositorio contiene frontend y backend juntos.
+No se configura ni despliega el frontend con estos workflows.
+
+### CI Backend
+
+Archivo: `../.github/workflows/ci-backend.yml`.
+
+- Se ejecuta en pushes a `main` y pull requests dirigidos a `main` cuando cambia
+  `backend/` o alguno de los dos workflows del backend.
+- Los cambios únicamente de Markdown y los de `frontend/` no activan este CI.
+  Se usan filtros `paths` con exclusión de `backend/**/*.md`; no se combina
+  `paths` con `paths-ignore`, porque GitHub no lo admite para un mismo evento.
+- Cancela ejecuciones antiguas del mismo PR o rama y limita permisos a `contents: read`.
+- `test`: checkout, `astral-sh/setup-uv@v5` con uv **0.12.19**, Python **3.13** y
+  caché de `backend/uv.lock`, después `uv sync --frozen` y `uv run --frozen pytest -q`.
+- Las pruebas no reciben credenciales ni ejecutan las pruebas optativas reales
+  de Supabase. Los orígenes CORS de prueba se declaran en el job para no depender
+  de un `.env` que no se sube al repositorio.
+- `docker` depende de `test`: Buildx y `docker/build-push-action@v6`, contexto
+  `backend/`, `push: false` y caché `type=gha` con scope `backend`.
+  No publica una imagen en Docker Hub ni necesita credenciales de ese registro.
+
+### Deploy Backend
+
+Archivo: `../.github/workflows/deploy-backend.yml`.
+
+El flujo automático es **push a main → CI Backend verde (test y Docker) →
+Deploy Backend → smoke test**. Un CI fallido/cancelado o una ejecución de PR
+no dispara el despliegue de producción. Se comprueba que el push venga de este
+repositorio y de `main`; no se descarga código ni artefactos de PR en Deploy.
+
+También admite **Actions > Deploy Backend > Run workflow**, seleccionando
+`main`. El modo manual permite redesplegar sin esperar un nuevo CI; no está
+habilitado para desplegar otra rama accidentalmente.
+El job usa el entorno de GitHub **`production`** y permisos `contents: read`.
+No se cancelan despliegues que ya hayan sido solicitados a Render.
+
+### Configuración manual previa
+
+1. En el servicio **backend** de Render, abrir **Settings > Deploy Hook** y copiar
+   su URL completa. No usar el hook del frontend ni compartir la URL en capturas.
+2. En GitHub, dentro de `Gesti-n-Residuos`, abrir **Settings > Secrets and variables
+   > Actions > New repository secret**:
+   - **Name:** `HOOK_RENDER_BACKEND` (sin espacios ni guiones).
+   - **Secret:** la URL completa del Deploy Hook del backend.
+3. Si ya se guardó con otro nombre, crear/renombrar el secreto para que coincida
+   exactamente con `HOOK_RENDER_BACKEND`. No pegar la URL en archivos ni commits.
+4. En Render, **desactivar Auto-Deploy del backend** (Off). Dejar que Actions
+   solicite el despliegue después del CI; de lo contrario Render podría desplegar
+   antes de conocer el resultado y duplicar las solicitudes. No desactivar el
+   frontend en esta tarea.
+5. Mantener la rama del servicio backend en `main` y las variables privadas en
+   Render. No hacen falta `DATABASE_URL`, tokens de ApisPeru ni Geoapify en Actions.
+6. La URL pública comprobada por defecto es `https://gesti-n-residuos.onrender.com`.
+   Si cambió, crear la **variable** de Actions `RENDER_BACKEND_URL` con el origen
+   real, sin barra final. Esta URL es pública y no reemplaza el secreto del hook.
+
+El Deploy envía un POST al hook con `curl -f` y el SHA de CI en el parámetro
+`ref`, para solicitar ese commit comprobado. En modo manual usa el commit de
+`main` seleccionado. La respuesta se guarda temporalmente, sin imprimir el hook.
+No se consulta ni se hace polling del deploy ID de Render. Para permitirlo,
+los dos workflows deben haberse fusionado a la rama predeterminada `main`.
+
+Después se consultan `/health` y `/health/db` con `curl --fail`, **12 reintentos**,
+`--retry-all-errors`, espera de **15 s** y un máximo de **120 s por intento**.
+El tiempo acumulado de reintentos está acotado y el job tiene límite de 30 minutos.
+Esto tolera el cold start del plan Free y fallos HTTP temporales. No se crean
+cuentas, reportes, migraciones ni registros de prueba en producción.
+
+**Alcance del smoke test:** confirma que el servicio y la consulta de Supabase
+responden, pero no acredita que el nuevo commit ya esté activo. Mientras Render
+construye, la versión anterior puede seguir respondiendo. Revisar manualmente
+en Render que finalice el despliegue y cambien su commit/fecha. Un hook aceptado
+no es lo mismo que una construcción terminada con éxito.
+
+### Verificación y entrega
+
+- Local: `uv run pytest -q` (sin activar pruebas reales) y `docker build -t dw-backend .`
+  desde `backend/`.
+- Hacer commit/push en `github-actions-backend` y abrir un PR hacia `main`.
+  El PR debe mostrar **CI Backend** en verde; Deploy se omite para PR.
+- Al fusionar, comprobar **CI Backend**, después **Deploy Backend**, el smoke
+  test y el resultado/fecha del despliegue en Render.
+- La creación del secreto, los ajustes de Render, commit, push y fusión los
+  realiza el usuario manualmente. No se invoca un hook real durante las pruebas locales.
+
+Preparación comprobada: 63 pruebas aprobadas y 2 pruebas reales optativas
+omitidas, también en Linux con Python 3.13 y uv 0.12.19, sin `.env` ni conexión
+a Supabase. `docker build -t dw-backend .` finalizó correctamente y `actionlint`
+validó los dos workflows. La ejecución real de Actions y del hook queda pendiente
+del push, la configuración manual y la fusión del PR.
+
+En la comprobación pública realizada durante esta preparación, `/health`
+respondió HTTP 200 y `/health/db` respondió HTTP 503 con el mensaje de conexión
+a Supabase no disponible. Hay que revisar `DATABASE_URL` y la disponibilidad de
+Supabase en el backend de Render antes de esperar un smoke test verde. Esta
+configuración no modifica esas credenciales ni omite la comprobación de base.
+
+Referencias: [eventos de Actions](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run),
+[Deploy Hooks](https://render.com/docs/deploy-hooks),
+[setup-uv](https://github.com/astral-sh/setup-uv),
+[Docker build action](https://github.com/docker/build-push-action).
 
 ## Pruebas
 
