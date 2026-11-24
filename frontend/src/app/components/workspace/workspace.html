@@ -1,4 +1,4 @@
-<div class="page-heading">
+<div class="page-heading d-flex flex-wrap gap-3">
   <div>
     <span class="eyebrow">{{
       auth.user()?.rol === 'administrador'
@@ -10,17 +10,17 @@
     <h1>{{ titles[mode] }}</h1>
     <p>{{ subtitles[mode] }}</p>
   </div>
-  <div class="heading-actions">
-    <button class="button subtle" (click)="load()" [disabled]="loading()">
+  <div class="heading-actions d-flex flex-wrap gap-2">
+    <button class="button subtle btn btn-outline-secondary" (click)="load()" [disabled]="loading()">
       <app-icon name="refresh" />Actualizar
     </button>
     @if (auth.user()?.rol === 'ciudadano' && ['panel', 'reportes'].includes(mode)) {
-      <a class="button primary" routerLink="/nuevo-reporte"
+      <a class="button primary btn btn-primary" routerLink="/nuevo-reporte"
         ><app-icon name="plus" />Nuevo reporte</a
       >
     }
     @if (['cuadrillas', 'vehiculos', 'cuentas'].includes(mode)) {
-      <button class="button primary" (click)="edit(mode)">
+      <button class="button primary btn btn-primary" (click)="edit(mode)">
         <app-icon name="plus" />{{
           mode === 'cuadrillas'
             ? 'Nueva cuadrilla'
@@ -33,12 +33,12 @@
   </div>
 </div>
 @if (error()) {
-  <div class="notice error" role="alert">
+  <div class="notice error alert alert-danger" role="alert">
     {{ error() }} <a routerLink="/ingresar">Volver al acceso</a>
   </div>
 }
 @if (notice()) {
-  <div class="notice success" role="status">{{ notice() }}</div>
+  <div class="notice success alert alert-success" role="status">{{ notice() }}</div>
 }
 @if (loading()) {
   <div class="loading-state" role="status"><span class="spinner"></span>Cargando información…</div>
@@ -56,7 +56,7 @@
         }}
       </p>
       <a
-        class="button light"
+        class="button light btn btn-light"
         [routerLink]="auth.user()?.rol === 'ciudadano' ? '/nuevo-reporte' : '/reportes'"
         >{{ auth.user()?.rol === 'ciudadano' ? 'Reportar un incidente' : 'Revisar reportes' }}</a
       >
@@ -87,13 +87,13 @@
       ><small>Con validación municipal</small>
     </article>
   </div>
-  <section class="card">
+  <section class="card shadow-sm">
     <div class="card-heading">
       <div>
         <h2>Últimos reportes</h2>
         <p>El seguimiento de cada incidente, en un solo lugar.</p>
       </div>
-      <a class="text-button" routerLink="/reportes">Ver todos</a>
+      <a class="text-button btn btn-link" routerLink="/reportes">Ver todos</a>
     </div>
     @if (loaded() && !reports().length) {
       <div class="empty-state">
@@ -117,16 +117,17 @@
           >
           <p>{{ r.direccionReferencia }}</p>
         </div>
-        <span class="badge" [class]="'badge ' + badgeClass(r)">{{ badge(r) }}</span></a
+        <span class="badge rounded-pill" [class]="'badge ' + badgeClass(r)">{{ badge(r) }}</span></a
       >
     }
   </section>
 }
 @if (mode === 'reportes') {
-  <section class="card">
+  <section class="card shadow-sm">
     <div class="filters">
       <div class="search-field">
         <app-icon name="search" /><input
+          class="form-control"
           aria-label="Buscar reportes"
           [value]="search()"
           (input)="search.set($any($event.target).value)"
@@ -134,6 +135,7 @@
         />
       </div>
       <select
+        class="form-select"
         aria-label="Filtrar revisión"
         [value]="review()"
         (change)="review.set($any($event.target).value)"
@@ -143,6 +145,7 @@
         <option value="aprobado">Aprobados</option>
         <option value="rechazado">Rechazados</option></select
       ><select
+        class="form-select"
         aria-label="Filtrar atención"
         [value]="status()"
         (change)="status.set($any($event.target).value)"
@@ -152,6 +155,7 @@
         <option value="en proceso">En proceso</option>
         <option value="resuelto">Resuelto</option></select
       ><select
+        class="form-select"
         aria-label="Filtrar tipo de residuo"
         [value]="type()"
         (change)="type.set($any($event.target).value)"
@@ -161,6 +165,7 @@
           <option [value]="t['idTipoResiduo']">{{ t['nombreTipo'] }}</option>
         }</select
       ><select
+        class="form-select"
         aria-label="Filtrar prioridad"
         [value]="priority()"
         (change)="priority.set($any($event.target).value)"
@@ -169,24 +174,30 @@
         @for (p of catalogs().prioridades; track p['idPrioridad']) {
           <option [value]="p['idPrioridad']">{{ p['nombrePrioridad'] }}</option>
         }</select
-      ><label class="date-filter"
+      ><label class="date-filter form-label"
         >Desde<input
+          class="form-control"
           type="date"
           [value]="from()"
           (change)="from.set($any($event.target).value)" /></label
-      ><label class="date-filter"
+      ><label class="date-filter form-label"
         >Hasta<input
+          class="form-control"
           type="date"
           [value]="to()"
           (change)="to.set($any($event.target).value)" /></label
-      ><button class="text-button" (click)="clearFilters()">Limpiar filtros</button>
+      ><button class="text-button btn btn-link" (click)="clearFilters()">Limpiar filtros</button>
     </div>
     <div class="list-heading">
       <span>{{ filtered().length }} resultados</span>
       <div class="segmented">
-        <button [class.selected]="view() === 'list'" (click)="view.set('list')">
+        <button
+          class="btn btn-link"
+          [class.selected]="view() === 'list'"
+          (click)="view.set('list')"
+        >
           <app-icon name="catalog" />Lista</button
-        ><button [class.selected]="view() === 'map'" (click)="view.set('map')">
+        ><button class="btn btn-link" [class.selected]="view() === 'map'" (click)="view.set('map')">
           <app-icon name="map" />Mapa
         </button>
       </div>
@@ -197,8 +208,8 @@
         <p class="help">La lista inferior muestra los mismos reportes del mapa.</p>
       </div>
     }
-    <div class="table-scroll">
-      <table>
+    <div class="table-scroll table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
             <th>REPORTE</th>
@@ -227,7 +238,9 @@
               </td>
               <td class="nowrap">{{ r.fechaReporte | date: 'dd MMM yyyy' }}</td>
               <td>
-                <a class="text-button" [routerLink]="['/reportes', r.idReporte]">Ver detalle</a>
+                <a class="text-button btn btn-link" [routerLink]="['/reportes', r.idReporte]"
+                  >Ver detalle</a
+                >
               </td>
             </tr>
           }
@@ -250,7 +263,7 @@
   </section>
 }
 @if (mode === 'atenciones') {
-  <section class="card">
+  <section class="card shadow-sm">
     <div class="card-heading">
       <div>
         <h2>Intervenciones asignadas</h2>
@@ -260,8 +273,8 @@
         </p>
       </div>
     </div>
-    <div class="table-scroll">
-      <table>
+    <div class="table-scroll table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
             <th>REPORTE</th>
@@ -275,13 +288,12 @@
           @for (a of attentions(); track a['idAtencion']) {
             <tr>
               <td>
-                <a class="text-button" [routerLink]="['/reportes', a['idReporte']]"
+                <a class="text-button btn btn-link" [routerLink]="['/reportes', a['idReporte']]"
                   >#{{ a['idReporte'] }}</a
                 ><small>{{ a['direccionReferencia'] }}</small>
               </td>
               <td>
-                <strong>{{ a['nombreCuadrilla'] }}</strong
-                ><small>{{ a['placa'] }}</small>
+                <strong>{{ a['nombreCuadrilla'] }}</strong><small>{{ a['placa'] }}</small>
               </td>
               <td>{{ a['fechaAsignacion'] | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>
@@ -295,19 +307,25 @@
                 >
               </td>
               <td>
-                <div class="row-actions">
+                <div class="row-actions d-flex flex-wrap gap-2">
                   @if (!a['fechaInicio']) {
-                    <button class="button subtle compact" (click)="advance(a, 'iniciar')">
+                    <button
+                      class="button subtle compact btn btn-outline-secondary btn-sm"
+                      (click)="advance(a, 'iniciar')"
+                    >
                       Iniciar
                     </button>
                   }
                   @if (a['fechaInicio'] && !a['fechaFin']) {
-                    <button class="button primary compact" (click)="advance(a, 'finalizar')">
+                    <button
+                      class="button primary compact btn btn-primary btn-sm"
+                      (click)="advance(a, 'finalizar')"
+                    >
                       Finalizar
                     </button>
                   }
                   @if (!a['fechaFin']) {
-                    <button class="text-button" (click)="advance(a, 'observar')">
+                    <button class="text-button btn btn-link" (click)="advance(a, 'observar')">
                       Observación
                     </button>
                   }
@@ -330,7 +348,7 @@
 @if (mode === 'cuadrillas') {
   <div class="resource-grid">
     @for (c of resources()['cuadrillas']; track c['idCuadrilla']) {
-      <article class="card resource-card">
+      <article class="card resource-card shadow-sm">
         <div class="resource-card-top">
           <span class="resource-symbol"><app-icon name="users" /></span
           ><span
@@ -342,38 +360,46 @@
         <p>{{ c['descripcion'] || 'Sin descripción adicional.' }}</p>
         <small>{{ crewMembers(c['idCuadrilla']).length }} integrantes vigentes</small>
         <div class="resource-actions">
-          <button class="text-button" (click)="edit('cuadrillas', c)">Editar cuadrilla</button
-          ><button class="button subtle compact" (click)="selectedCrew.set(c)">Integrantes</button>
+          <button class="text-button btn btn-link" (click)="edit('cuadrillas', c)">
+            Editar cuadrilla</button
+          ><button
+            class="button subtle compact btn btn-outline-secondary btn-sm"
+            (click)="selectedCrew.set(c)"
+          >
+            Integrantes
+          </button>
         </div>
       </article>
     }
   </div>
   @if (loaded() && !resources()['cuadrillas'].length) {
-    <div class="card empty-state">
+    <div class="card empty-state shadow-sm">
       <app-icon name="users" />
       <h3>Organiza tu primera cuadrilla</h3>
       <p>Registra el equipo y vincula sus integrantes para comenzar a asignar atenciones.</p>
     </div>
   }
   @if (selectedCrew(); as crew) {
-    <section class="card member-section">
+    <section class="card member-section shadow-sm">
       <div class="card-heading">
         <div>
           <h2>Integrantes de {{ crew['nombreCuadrilla'] }}</h2>
           <p>Se conserva la vigencia de cada pertenencia.</p>
         </div>
-        <div class="row-actions">
-          <button class="button primary compact" (click)="edit('integrante', crew)">
+        <div class="row-actions d-flex flex-wrap gap-2">
+          <button
+            class="button primary compact btn btn-primary btn-sm"
+            (click)="edit('integrante', crew)"
+          >
             Vincular integrante</button
-          ><button class="text-button" (click)="selectedCrew.set(null)">Cerrar</button>
+          ><button class="text-button btn btn-link" (click)="selectedCrew.set(null)">Cerrar</button>
         </div>
       </div>
       @for (m of resources()['integrantes']; track m['idPertenencia']) {
         @if (m['idCuadrilla'] === crew['idCuadrilla']) {
           <div class="member-row">
             <div>
-              <strong>{{ m['integrante'] }}</strong
-              ><small
+              <strong>{{ m['integrante'] }}</strong><small
                 >Desde {{ m['fechaInicio'] | date: 'dd/MM/yyyy' }}
                 @if (m['fechaFin']) {
                   · Hasta {{ m['fechaFin'] | date: 'dd/MM/yyyy' }}
@@ -382,14 +408,14 @@
             </div>
             @if (!m['fechaFin']) {
               <button
-                class="text-button"
+                class="text-button btn btn-link"
                 (click)="endMembership(m['idPertenencia'])"
                 [disabled]="busy()"
               >
                 Finalizar pertenencia
               </button>
             } @else {
-              <span class="badge neutral">Histórica</span>
+              <span class="badge neutral rounded-pill">Histórica</span>
             }
           </div>
         }
@@ -398,9 +424,9 @@
   }
 }
 @if (mode === 'vehiculos') {
-  <section class="card">
-    <div class="table-scroll">
-      <table>
+  <section class="card shadow-sm">
+    <div class="table-scroll table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
             <th>VEHÍCULO</th>
@@ -414,8 +440,7 @@
           @for (v of resources()['vehiculos']; track v['idVehiculo']) {
             <tr>
               <td>
-                <strong>{{ v['placa'] }}</strong
-                ><small>{{ v['marca'] }} · {{ v['modelo'] }}</small>
+                <strong>{{ v['placa'] }}</strong><small>{{ v['marca'] }} · {{ v['modelo'] }}</small>
               </td>
               <td>{{ v['capacidadToneladas'] }} t</td>
               <td>{{ v['estadoOperativo'] }}</td>
@@ -429,7 +454,11 @@
                   }}</span
                 >
               </td>
-              <td><button class="text-button" (click)="edit('vehiculos', v)">Editar</button></td>
+              <td>
+                <button class="text-button btn btn-link" (click)="edit('vehiculos', v)">
+                  Editar
+                </button>
+              </td>
             </tr>
           }
         </tbody>
@@ -445,7 +474,7 @@
   </section>
 }
 @if (mode === 'cuentas') {
-  <section class="card">
+  <section class="card shadow-sm">
     <div class="card-heading">
       <div>
         <h2>Acceso al sistema</h2>
@@ -455,8 +484,8 @@
         </p>
       </div>
     </div>
-    <div class="table-scroll">
-      <table>
+    <div class="table-scroll table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
             <th>PERSONA</th>
@@ -481,7 +510,9 @@
               </td>
               <td>
                 @if (a['idUsuario'] !== auth.user()?.idUsuario) {
-                  <button class="text-button" (click)="edit('cuentas', a)">Administrar</button>
+                  <button class="text-button btn btn-link" (click)="edit('cuentas', a)">
+                    Administrar
+                  </button>
                 } @else {
                   <small>Tu cuenta</small>
                 }
@@ -494,17 +525,23 @@
   </section>
 }
 @if (mode === 'catalogos') {
-  <section class="card">
+  <section class="card shadow-sm">
     <div class="card-heading">
       <div class="segmented">
-        <button [class.selected]="catalogKind() === 'tipos'" (click)="catalogKind.set('tipos')">
+        <button
+          class="btn btn-link"
+          [class.selected]="catalogKind() === 'tipos'"
+          (click)="catalogKind.set('tipos')"
+        >
           Tipos de residuo</button
         ><button
+          class="btn btn-link"
           [class.selected]="catalogKind() === 'prioridades'"
           (click)="catalogKind.set('prioridades')"
         >
           Prioridades</button
         ><button
+          class="btn btn-link"
           [class.selected]="catalogKind() === 'estados'"
           (click)="catalogKind.set('estados')"
         >
@@ -512,7 +549,9 @@
         </button>
       </div>
       @if (catalogKind() !== 'estados') {
-        <button class="button primary compact" (click)="edit('catalogo')">Nueva opción</button>
+        <button class="button primary compact btn btn-primary btn-sm" (click)="edit('catalogo')">
+          Nueva opción
+        </button>
       }
     </div>
     @if (catalogKind() === 'estados') {
@@ -521,8 +560,8 @@
         resuelto. La aprobación municipal es una decisión independiente.
       </p>
     }
-    <div class="table-scroll">
-      <table>
+    <div class="table-scroll table-responsive">
+      <table class="table table-hover align-middle mb-0">
         <thead>
           <tr>
             <th>NOMBRE</th>
@@ -545,7 +584,9 @@
               </td>
               <td>
                 @if (catalogKind() !== 'estados') {
-                  <button class="text-button" (click)="edit('catalogo', c)">Editar</button>
+                  <button class="text-button btn btn-link" (click)="edit('catalogo', c)">
+                    Editar
+                  </button>
                 } @else {
                   <small>Configuración del proceso</small>
                 }
@@ -558,16 +599,24 @@
   </section>
 }
 @if (mode === 'indicadores') {
-  <section class="card indicator-filters">
-    <label
+  <section class="card indicator-filters shadow-sm">
+    <label class="form-label"
       >Reportes desde<input
+        class="form-control"
         type="date"
         [value]="from()"
         (change)="from.set($any($event.target).value)" /></label
-    ><label
-      >Hasta<input type="date" [value]="to()" (change)="to.set($any($event.target).value)" /></label
-    ><button class="button primary" (click)="load()" [disabled]="loading()">Aplicar periodo</button
-    ><button class="text-button" (click)="from.set(''); to.set(''); load()">Todo el periodo</button>
+    ><label class="form-label"
+      >Hasta<input
+        class="form-control"
+        type="date"
+        [value]="to()"
+        (change)="to.set($any($event.target).value)" /></label
+    ><button class="button primary btn btn-primary" (click)="load()" [disabled]="loading()">
+      Aplicar periodo</button
+    ><button class="text-button btn btn-link" (click)="from.set(''); to.set(''); load()">
+      Todo el periodo
+    </button>
   </section>
   @if (indicators(); as data) {
     <div class="metric-grid">
@@ -591,7 +640,7 @@
       </article>
     </div>
     <div class="two-columns">
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <h2>Tiempos promedio</h2>
         <div class="time-metric">
           <span>Desde reporte hasta inicio</span
@@ -615,12 +664,11 @@
           {{ data['rechazados'] }}.
         </p>
       </section>
-      <section class="card padded">
+      <section class="card padded shadow-sm">
         <h2>Atenciones por cuadrilla</h2>
         @for (c of data['cuadrillas']; track c['nombreCuadrilla']) {
           <div class="load-row">
-            <span>{{ c['nombreCuadrilla'] }}</span
-            ><strong
+            <span>{{ c['nombreCuadrilla'] }}</span><strong
               >{{ c['total'] }} <small>({{ c['abiertas'] }} abiertas)</small></strong
             >
           </div>
@@ -638,9 +686,9 @@
   }
 }
 @if (editor(); as e) {
-  <div class="modal-backdrop" (click)="!busy() && editor.set(null)">
+  <div class="app-modal-overlay" (click)="!busy() && editor.set(null)">
     <section
-      class="modal card"
+      class="app-dialog card shadow-sm modal-content"
       role="dialog"
       aria-modal="true"
       appDialogFocus
@@ -651,7 +699,7 @@
       <div class="modal-heading">
         <h2 id="editor-title">{{ e.title }}</h2>
         <button
-          class="icon-button"
+          class="icon-button btn btn-sm"
           (click)="editor.set(null)"
           [disabled]="busy()"
           aria-label="Cerrar formulario"
@@ -661,13 +709,14 @@
       </div>
       <form (submit)="save($event)" class="form-stack">
         @if (editorError()) {
-          <div class="notice error" role="alert">{{ editorError() }}</div>
+          <div class="notice error alert alert-danger" role="alert">{{ editorError() }}</div>
         }
         @for (f of e.fields; track f.key) {
-          <label
+          <label class="form-label"
             >{{ f.label }}
             @if (f.options) {
               <select
+                class="form-select"
                 [value]="draft()[f.key] || ''"
                 (change)="setDraft(f.key, $any($event.target).value)"
                 [required]="!f.optional"
@@ -679,6 +728,7 @@
               </select>
             } @else if (f.type === 'textarea') {
               <textarea
+                class="form-control"
                 rows="3"
                 [value]="draft()[f.key] || ''"
                 (input)="setDraft(f.key, $any($event.target).value)"
@@ -687,6 +737,7 @@
               ></textarea>
             } @else {
               <input
+                class="form-control"
                 [type]="f.type || 'text'"
                 [value]="draft()[f.key] || ''"
                 (input)="setDraft(f.key, $any($event.target).value)"
@@ -702,12 +753,12 @@
         <div class="modal-actions">
           <button
             type="button"
-            class="button subtle"
+            class="button subtle btn btn-outline-secondary"
             (click)="editor.set(null)"
             [disabled]="busy()"
           >
             Cancelar</button
-          ><button type="submit" class="button primary" [disabled]="busy()">
+          ><button type="submit" class="button primary btn btn-primary" [disabled]="busy()">
             {{ busy() ? 'Guardando…' : 'Guardar cambios' }}
           </button>
         </div>

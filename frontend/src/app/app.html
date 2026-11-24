@@ -5,17 +5,17 @@
       ><span class="brand-mark"><app-icon name="leaf" /></span
       ><span>Huancayo<span class="brand-second">Limpio</span></span></a
     >
-    <nav aria-label="Navegación principal">
-      <a routerLink="/">Inicio</a>
+    <nav class="nav align-items-center" aria-label="Navegación principal">
+      <a class="nav-link" routerLink="/">Inicio</a>
       @if (auth.user()) {
-        <a class="button primary" routerLink="/panel">Ir a mi espacio</a>
+        <a class="button primary btn btn-primary" routerLink="/panel">Ir a mi espacio</a>
       } @else {
-        <a routerLink="/ingresar">Iniciar sesión</a
-        ><a class="button primary" routerLink="/registro">Crear cuenta</a>
+        <a class="nav-link" routerLink="/ingresar">Iniciar sesión</a
+        ><a class="button primary btn btn-primary" routerLink="/registro">Crear cuenta</a>
       }
     </nav>
   </header>
-  <main id="contenido" class="public-main"><router-outlet /></main>
+  <main id="contenido" class="public-main container-fluid"><router-outlet /></main>
   <footer class="public-footer">
     <span>Huancayo Limpio · Una ciudad que cuidamos juntos.</span
     ><span>Huancayo, Junín · Proyecto académico</span>
@@ -29,41 +29,47 @@
       >
       <span class="brand-caption">GESTIÓN DE RESIDUOS SÓLIDOS</span>
       <p class="nav-label">MI ESPACIO</p>
-      <nav class="side-nav" aria-label="Módulos">
-        <a routerLink="/panel" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+      <nav class="side-nav nav nav-pills" aria-label="Módulos">
+        <a
+          class="nav-link"
+          routerLink="/panel"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
           ><app-icon name="grid" />Resumen</a
         >
         @if (auth.user()?.rol === 'ciudadano') {
-          <a routerLink="/nuevo-reporte" routerLinkActive="active"
+          <a class="nav-link" routerLink="/nuevo-reporte" routerLinkActive="active"
             ><app-icon name="plus" />Nuevo reporte</a
           >
         }
-        <a routerLink="/reportes" routerLinkActive="active"
+        <a class="nav-link" routerLink="/reportes" routerLinkActive="active"
           ><app-icon name="catalog" />{{
             auth.user()?.rol === 'ciudadano' ? 'Mis reportes' : 'Reportes'
           }}</a
         >
         @if (auth.user()?.rol !== 'ciudadano') {
-          <a routerLink="/atenciones" routerLinkActive="active"
+          <a class="nav-link" routerLink="/atenciones" routerLinkActive="active"
             ><app-icon name="check" />Atenciones</a
           >
         }
         @if (auth.user()?.rol === 'administrador') {
           <span class="nav-label">GESTIÓN MUNICIPAL</span>
-          <a routerLink="/cuadrillas" routerLinkActive="active"
+          <a class="nav-link" routerLink="/cuadrillas" routerLinkActive="active"
             ><app-icon name="users" />Cuadrillas</a
           >
-          <a routerLink="/vehiculos" routerLinkActive="active"
+          <a class="nav-link" routerLink="/vehiculos" routerLinkActive="active"
             ><app-icon name="truck" />Vehículos</a
           >
-          <a routerLink="/personas" routerLinkActive="active"><app-icon name="users" />Personas</a>
-          <a routerLink="/cuentas" routerLinkActive="active"
+          <a class="nav-link" routerLink="/personas" routerLinkActive="active"
+            ><app-icon name="users" />Personas</a
+          >
+          <a class="nav-link" routerLink="/cuentas" routerLinkActive="active"
             ><app-icon name="shield" />Cuentas y roles</a
           >
-          <a routerLink="/catalogos" routerLinkActive="active"
+          <a class="nav-link" routerLink="/catalogos" routerLinkActive="active"
             ><app-icon name="catalog" />Catálogos</a
           >
-          <a routerLink="/indicadores" routerLinkActive="active"
+          <a class="nav-link" routerLink="/indicadores" routerLinkActive="active"
             ><app-icon name="chart" />Indicadores</a
           >
         }
@@ -84,8 +90,7 @@
         <div class="profile">
           <span class="avatar">{{ initials }}</span>
           <div>
-            <strong>{{ auth.user()?.nombres }}</strong
-            ><small>{{
+            <strong>{{ auth.user()?.nombres }}</strong><small>{{
               auth.user()?.rol === 'administrador'
                 ? 'Administrador municipal'
                 : auth.user()?.rol === 'cuadrilla'
@@ -94,7 +99,7 @@
             }}</small>
           </div>
           <button
-            class="icon-button"
+            class="icon-button btn btn-sm"
             (click)="logout()"
             [disabled]="closing()"
             aria-label="Cerrar sesión"
@@ -104,9 +109,9 @@
           </button>
         </div>
       </header>
-      <main id="contenido" class="workspace-main">
+      <main id="contenido" class="workspace-main container-fluid">
         @if (error()) {
-          <div class="notice error" role="alert">{{ error() }}</div>
+          <div class="notice error alert alert-danger" role="alert">{{ error() }}</div>
         }
         <router-outlet />
       </main>

@@ -1,0 +1,47 @@
+@use 'sass:map';
+// Bootstrap 5: cargar los componentes utilizados, sin plugins JS ni utilidades ajenas.
+@import 'bootstrap/scss/functions';
+
+$primary: #1c704e;
+$secondary: #61786b;
+$font-family-sans-serif: 'Segoe UI', system-ui, sans-serif;
+$body-color: #233e30;
+$body-bg: #f5f7f4;
+$enable-dark-mode: false;
+
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+// Solo se generan las utilidades presentes en las plantillas de la aplicación.
+$utilities: (
+  'display': map.get($utilities, 'display'),
+  'flex-direction': map.get($utilities, 'flex-direction'),
+  'flex-wrap': map.get($utilities, 'flex-wrap'),
+  'align-items': map.get($utilities, 'align-items'),
+  'gap': map.get($utilities, 'gap'),
+  'width': map.get($utilities, 'width'),
+  'height': map.get($utilities, 'height'),
+  'margin-bottom': map.get($utilities, 'margin-bottom'),
+  'shadow': map.get($utilities, 'shadow'),
+  'rounded': map.get($utilities, 'rounded'),
+);
+
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/images';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/tables';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/modal';
+@import 'bootstrap/scss/helpers/visually-hidden';
+@import 'bootstrap/scss/utilities/api';

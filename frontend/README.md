@@ -4,6 +4,42 @@ El frontend se publica como **Web Service con runtime Node**, siguiendo el forma
 de la clase. El backend sigue usando su Dockerfile y no se modifica en esta tarea.
 Se utiliza el repositorio existente; no hace falta crear otro repositorio.
 
+## Interfaz con Bootstrap 5
+
+La interfaz utiliza **Bootstrap 5.3.9**, instalado y bloqueado mediante npm,
+sin CDN. Se aplica a inicio, acceso y registro, personas, reportes, detalle,
+atenciones, cuadrillas, vehículos, cuentas, catálogos e indicadores.
+
+- `src/bootstrap.scss` compila la cuadrícula responsive, controles de formulario,
+  botones, navegación, tarjetas, tablas, alertas, badges y diálogos utilizados.
+  La selección de utilidades evita descargar todo el CSS de Bootstrap.
+- `angular.json` carga ese tema antes de `src/styles.css`. Los estilos propios
+  conservan la identidad de Huancayo Limpio y la distribución específica de
+  los paneles y mapas. No es necesario convertir cada elemento en un componente
+  Bootstrap para utilizar el framework.
+- Los formularios conservan las validaciones de Angular. Los diálogos siguen
+  controlados por Angular y `appDialogFocus`: foco, Escape y retorno al control
+  anterior. No se carga JavaScript de Bootstrap ni jQuery.
+- Los contenedores de tablas permiten desplazamiento horizontal local en móvil.
+  Se conservan los nombres accesibles, mensajes y restricciones por rol.
+
+Bootstrap 5 utiliza Sass `@import` internamente; el preprocesador silencia las
+advertencias de deprecación de esa integración sin elevar los presupuestos de
+tamaño ni silenciar errores de compilación.
+
+Para cambios visuales, trabajar en una rama, ejecutar pruebas y compilación,
+revisar móvil/tablet/escritorio y fusionar mediante PR a `main`. El workflow
+existente publica el frontend en el mismo servicio y URL de Render.
+
+Validación de esta adaptación: 37 pruebas de Angular aprobadas y build de
+producción correcto (paquete inicial de aproximadamente 463 kB). Se realizaron
+49 comprobaciones de navegación en Chromium a 390, 768 y 1440 píxeles, con los
+tres roles y datos simulados, sin desbordes horizontales de página ni errores
+de JavaScript. También se comprobaron mapa, foco/Escape de diálogos y envío de
+un vehículo simulado. Estas pruebas no escribieron registros en Supabase.
+
+Referencia: [Bootstrap 5: personalización con Sass](https://getbootstrap.com/docs/5.3/customize/sass/).
+
 ## Comandos
 
 | Uso | Comando |

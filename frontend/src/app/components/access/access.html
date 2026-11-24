@@ -1,5 +1,5 @@
-<section class="access-layout">
-  <div class="access-story">
+<section class="access-layout row g-4">
+  <div class="access-story col-12 col-lg-6">
     <span class="section-tag">HUANCAYO LIMPIO</span>
     <h1>Tu participación<br />hace la diferencia.</h1>
     <p>Un espacio para reportar, coordinar y cuidar juntos nuestra ciudad.</p>
@@ -26,121 +26,146 @@
     </div>
     <span class="story-footer">Huancayo · Junín · Perú</span>
   </div>
-  <div class="access-form card">
-    <span class="eyebrow">{{ register ? 'SÚMATE AL CAMBIO' : 'BIENVENIDO DE NUEVO' }}</span>
-    <h2>{{ register ? 'Crea tu cuenta ciudadana' : 'Inicia sesión' }}</h2>
-    <p class="muted">
-      {{
-        register
-          ? 'Completa tus datos para comenzar a reportar.'
-          : 'Ingresa para continuar cuidando nuestra ciudad.'
-      }}
-    </p>
-    @if (error()) {
-      <div class="notice error" role="alert">{{ error() }}</div>
-    }
-    <form [formRoot]="fields" class="form-stack">
-      @if (register) {
-        <label
-          >DNI
+  <div class="col-12 col-lg-6">
+    <div class="access-form card shadow-sm">
+      <span class="eyebrow">{{ register ? 'SÚMATE AL CAMBIO' : 'BIENVENIDO DE NUEVO' }}</span>
+      <h2>{{ register ? 'Crea tu cuenta ciudadana' : 'Inicia sesión' }}</h2>
+      <p class="muted">
+        {{
+          register
+            ? 'Completa tus datos para comenzar a reportar.'
+            : 'Ingresa para continuar cuidando nuestra ciudad.'
+        }}
+      </p>
+      @if (error()) {
+        <div class="notice error alert alert-danger" role="alert">{{ error() }}</div>
+      }
+      <form [formRoot]="fields" class="form-stack">
+        @if (register) {
+          <label class="form-label"
+            >DNI
+            <div class="input-action">
+              <input
+                class="form-control"
+                [formField]="fields.dni"
+                inputmode="numeric"
+                placeholder="8 dígitos"
+              /><button
+                class="button subtle btn btn-outline-secondary"
+                type="button"
+                (click)="lookup()"
+                [disabled]="looking()"
+              >
+                {{ looking() ? 'Consultando…' : 'Consultar DNI' }}
+              </button>
+            </div></label
+          ><small class="help"
+            >La consulta sugiere datos; no verifica la titularidad del documento.</small
+          >
+          @if (lookupMessage()) {
+            <div class="notice alert alert-info" role="status">{{ lookupMessage() }}</div>
+          }
+          @if (suggestion()) {
+            <div class="notice success alert alert-success">
+              <p>{{ suggestion()!['nombres'] }} {{ suggestion()!['apellidos'] }}</p>
+              <button
+                class="button subtle compact btn btn-outline-secondary btn-sm"
+                type="button"
+                (click)="useSuggestion()"
+              >
+                Confirmar y usar estos datos
+              </button>
+            </div>
+          }
+          <div class="row g-3">
+            <label class="form-label col-12 col-sm-6"
+              >Nombres<input
+                class="form-control"
+                [formField]="fields.nombres"
+                autocomplete="given-name"
+                placeholder="Tus nombres" /></label
+            ><label class="form-label col-12 col-sm-6"
+              >Apellidos<input
+                class="form-control"
+                [formField]="fields.apellidos"
+                autocomplete="family-name"
+                placeholder="Tus apellidos"
+            /></label>
+          </div>
+          <label class="form-label"
+            >Teléfono<input
+              class="form-control"
+              [formField]="fields.telefono"
+              inputmode="tel"
+              autocomplete="tel-national"
+              placeholder="9 dígitos"
+          /></label>
+        }
+        <label class="form-label"
+          >Correo electrónico<input
+            class="form-control"
+            type="email"
+            [formField]="fields.correo"
+            autocomplete="email"
+            placeholder="tu.correo@ejemplo.com"
+        /></label>
+        <label class="form-label"
+          >Contraseña
           <div class="input-action">
-            <input [formField]="fields.dni" inputmode="numeric" placeholder="8 dígitos" /><button
-              class="button subtle"
+            <input
+              class="form-control"
+              [type]="showPassword() ? 'text' : 'password'"
+              [formField]="fields.password"
+              [autocomplete]="register ? 'new-password' : 'current-password'"
+              placeholder="Mínimo 10 caracteres"
+            /><button
+              class="text-button btn btn-link"
               type="button"
-              (click)="lookup()"
-              [disabled]="looking()"
+              (click)="showPassword.set(!showPassword())"
             >
-              {{ looking() ? 'Consultando…' : 'Consultar DNI' }}
+              {{ showPassword() ? 'Ocultar' : 'Mostrar' }}
             </button>
           </div></label
-        ><small class="help"
-          >La consulta sugiere datos; no verifica la titularidad del documento.</small
         >
-        @if (lookupMessage()) {
-          <div class="notice" role="status">{{ lookupMessage() }}</div>
+        @if (register) {
+          <label class="checkbox-label form-check-label"
+            ><input
+              class="form-check-input"
+              type="checkbox"
+              [checked]="consent()"
+              (change)="consent.set($any($event.target).checked)"
+            /><span
+              >He revisado mis datos y acepto utilizarlos para gestionar mi cuenta y mis
+              reportes.</span
+            ></label
+          >
         }
-        @if (suggestion()) {
-          <div class="notice success">
-            <p>{{ suggestion()!['nombres'] }} {{ suggestion()!['apellidos'] }}</p>
-            <button class="button subtle compact" type="button" (click)="useSuggestion()">
-              Confirmar y usar estos datos
-            </button>
-          </div>
+        @if (fields().invalid() && fields().touched()) {
+          <small class="field-error"
+            >Revisa los campos: correo válido, contraseña de 10 caracteres como mínimo y, al
+            registrarte, DNI de 8 dígitos y teléfono de 9.</small
+          >
         }
-        <div class="form-grid">
-          <label
-            >Nombres<input
-              [formField]="fields.nombres"
-              autocomplete="given-name"
-              placeholder="Tus nombres" /></label
-          ><label
-            >Apellidos<input
-              [formField]="fields.apellidos"
-              autocomplete="family-name"
-              placeholder="Tus apellidos"
-          /></label>
-        </div>
-        <label
-          >Teléfono<input
-            [formField]="fields.telefono"
-            inputmode="tel"
-            autocomplete="tel-national"
-            placeholder="9 dígitos"
-        /></label>
-      }
-      <label
-        >Correo electrónico<input
-          type="email"
-          [formField]="fields.correo"
-          autocomplete="email"
-          placeholder="tu.correo@ejemplo.com"
-      /></label>
-      <label
-        >Contraseña
-        <div class="input-action">
-          <input
-            [type]="showPassword() ? 'text' : 'password'"
-            [formField]="fields.password"
-            [autocomplete]="register ? 'new-password' : 'current-password'"
-            placeholder="Mínimo 10 caracteres"
-          /><button class="text-button" type="button" (click)="showPassword.set(!showPassword())">
-            {{ showPassword() ? 'Ocultar' : 'Mostrar' }}
-          </button>
-        </div></label
-      >
-      @if (register) {
-        <label class="checkbox-label"
-          ><input
-            type="checkbox"
-            [checked]="consent()"
-            (change)="consent.set($any($event.target).checked)"
-          /><span
-            >He revisado mis datos y acepto utilizarlos para gestionar mi cuenta y mis
-            reportes.</span
-          ></label
+        <button
+          class="button primary full-width btn btn-primary w-100"
+          type="submit"
+          [disabled]="fields().submitting()"
         >
-      }
-      @if (fields().invalid() && fields().touched()) {
-        <small class="field-error"
-          >Revisa los campos: correo válido, contraseña de 10 caracteres como mínimo y, al
-          registrarte, DNI de 8 dígitos y teléfono de 9.</small
-        >
-      }
-      <button class="button primary full-width" type="submit" [disabled]="fields().submitting()">
-        {{ fields().submitting() ? 'Procesando…' : register ? 'Crear mi cuenta' : 'Ingresar' }}
-      </button>
-    </form>
-    <p class="access-switch">
-      {{ register ? '¿Ya tienes una cuenta?' : '¿Primera vez por aquí?' }}
-      <a [routerLink]="register ? '/ingresar' : '/registro'">{{
-        register ? 'Inicia sesión' : 'Crea tu cuenta'
-      }}</a>
-    </p>
-    @if (!register) {
-      <p class="help">
-        Ciudadanos y personal municipal ingresan aquí. Las funciones se habilitan según el rol de su
-        cuenta.
+          {{ fields().submitting() ? 'Procesando…' : register ? 'Crear mi cuenta' : 'Ingresar' }}
+        </button>
+      </form>
+      <p class="access-switch">
+        {{ register ? '¿Ya tienes una cuenta?' : '¿Primera vez por aquí?' }}
+        <a [routerLink]="register ? '/ingresar' : '/registro'">{{
+          register ? 'Inicia sesión' : 'Crea tu cuenta'
+        }}</a>
       </p>
-    }
+      @if (!register) {
+        <p class="help">
+          Ciudadanos y personal municipal ingresan aquí. Las funciones se habilitan según el rol de
+          su cuenta.
+        </p>
+      }
+    </div>
   </div>
 </section>
